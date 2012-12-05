@@ -175,9 +175,7 @@ class blog extends model_base
 		$commentID = self::$db->insert_id();
 
 		self::$db->query ("UPDATE `content` set `comments_count`=`comments_count`+1 WHERE `contentID`=?", $contentID);
-
 		self::$smarty->clearCurrentCache();
-		
 		system::redirect (self::$routePath."#comment_$commentID");
 	}
 	

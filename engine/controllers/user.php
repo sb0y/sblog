@@ -28,7 +28,7 @@ class controller_user extends controller_base
 	
 	function registration()
 	{
-		$this->smarty->clearCache ("userRegistration.tpl");
+		//$this->smarty->clearCache ("userRegistration.tpl");
 		system::setParam ("page", "userRegistration");
 		
 		if (isset ($_POST["email"]))

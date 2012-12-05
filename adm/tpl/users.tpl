@@ -58,7 +58,7 @@
 			</form>
 		 </p>
 		 <p>
-		 	{assign "pagBase" "blog/categories"}
+		 	{assign "pagBase" "users"}
 			{include file="includes/pagination.tpl"}
 		 </p>
 </div>

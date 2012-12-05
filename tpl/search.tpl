@@ -26,7 +26,7 @@
         </article>
     {/foreach}
 {else}
-<p>По запросу "{$searchWord nocache}" ничего не найдено.</p>
+<p>По запросу "{$searchWord}" ничего не найдено.</p>
 {/if}
 {/if}
 </div>

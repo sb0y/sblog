@@ -1,4 +1,3 @@
-{nocache}
 {if !isset ($fill)}
 {assign var=fill value=array()}
 {/if}
@@ -16,4 +15,3 @@
 		<button type="submit">{$sendText}</button>
 	</div>
 </div>
-{/nocache}

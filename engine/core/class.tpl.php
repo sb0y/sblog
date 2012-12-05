@@ -29,9 +29,9 @@ class tpl extends Smarty
       $this->setConfigDir ($this->configDir);
       $this->setCacheDir ($this->cacheDir);
 
-      $this->setCaching (Smarty::CACHING_LIFETIME_CURRENT);
-      $this->setCacheLifetime (3600);
-        
+      $this->setCaching (Smarty::CACHING_LIFETIME_SAVED);
+      $this->setCacheLifetime (60 * 60 * 24);
+
     	$base_url = rtrim (dirname ($_SERVER["PHP_SELF"]), '/\\').'/';
     	$base_url = "http://" . system::param("siteDomain") . $base_url;
                     
@@ -40,7 +40,7 @@ class tpl extends Smarty
 
    function setCacheID ($cacheID)
    {
-      $this->cacheIdShow = $cacheID;
+      $this->cacheIdShow = trim ($cacheID);
    }
 
    function addCacheID ($cacheID)
@@ -72,23 +72,23 @@ class tpl extends Smarty
    }
 
    function display ($page)
-   {
-		if (file_exists (TPL_PATH."/$page"))
-		{
-			if ($page)
-				$this->pageName = $page;
+   { 
+  		if (file_exists (TPL_PATH."/$page"))
+  		{
+    			if ($page)
+    				$this->pageName = $page;
 
-			if ($this->runBeforeDisplay)
-			{
-				foreach ($this->runBeforeDisplay as $k=>$v)
-				{
-					call_user_func_array ($v[0].$v[1].$v[2], empty ($v[3])?array():$v[3]);
-				}
-			}
+    			if ($this->runBeforeDisplay)
+    			{
+    				foreach ($this->runBeforeDisplay as $k=>$v)
+    				{
+    					call_user_func_array ($v[0].$v[1].$v[2], empty ($v[3])?array():$v[3]);
+    				}
+    			}
 
-			if (is_null ($this->cacheIdShow))
-				parent::display ($this->pageName);
-			else parent::display ($this->pageName, $this->cacheIdShow);
-		}
+    			if (is_null ($this->cacheIdShow))
+            parent::display ($this->pageName);
+    			else parent::display ($this->pageName, $this->cacheIdShow);
+  		}
 	}
 }

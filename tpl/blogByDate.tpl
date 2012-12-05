@@ -2,8 +2,7 @@
 {block name=title}Все записи от {$date}{/block}
 {block name=body}
  <div class="posts-list">
-    {nocache}
-    <p><h2 class="page-title">Все записи от {$date}</h2></p>
+    {if !empty ($date)}<p><h2 class="page-title">Все записи от {$date}</h2></p>{/if}
     	{if !empty ($posts)}
         {foreach $posts as $key=>$item}
 		{include file="includes/post4cycle.tpl"}
@@ -14,5 +13,4 @@
         {else}
         Ничего не найдено :(
         {/if}
-        {/nocache}
 {/block}

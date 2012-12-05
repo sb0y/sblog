@@ -40,7 +40,7 @@
 
     <script type="text/javascript">
 		var urlBase = "{$urlBase}";
-    </script>{nocache}
+    </script>
     {block name=pageScripts nocache}{/block}
 </head>
 <body>
@@ -49,15 +49,13 @@
             <div class="row">
                 <div class="column_12 top-panel">
                     <ul class="float-right">
-						{nocache}
-						{if !empty ($smarty.session.user)}
+						{if !empty ($smarty.session.user) nocache}
                         <li><a href="{$urlBase}user/controlpanel">Вы вошли как &nbsp;<span class="strong{if $smarty.session.user.source!="direct"} {$smarty.session.user.source}{/if}">{if isset($smarty.session.user)}{$smarty.session.user.nick}{/if}</span></a></li>
                         <li><a href="{$urlBase}user/logout">Выход</a></li>
                         {else}
                         <li><a class="loginButton" href="javascript:;">Вход</a></li>
                         <li><a href="{$urlBase}user/registration">Регистрация</a></li> 
                         {/if}
-                        {/nocache}
                     </ul>
                 </div>
             </div>
@@ -71,14 +69,14 @@
                     <div class="header-menu">
                         <ul class="float-right">
                             <li{if !isset ($args[0])} class="active"{/if} id="homepage"><a href="{$urlBase}">Главная</a></li>
-                            <li{if $args[0]=="about"} class="active" {/if}><a href="{$urlBase}about">Обо мне</a></li>
+                            <li{if isset ($args[0]) && $args[0]=="about"} class="active" {/if}><a href="{$urlBase}about">Обо мне</a></li>
                             <li class="has-dropdown"><a href="{$urlBase}blog">Блог</a>
                                 {if isset ($categories)}<ul class="dropdown">
 	                               {include file="includes/categories.tpl"}
                                 </ul>{/if}
                             </li>
-                            <li><a href="{$urlBase}portfolio">Портфолио</a></li>
-                            <li{if $args[0]=="contacts"} class="active" {/if}><a href="{$urlBase}contacts">Контакты</a></li>
+                            <li{if isset ($args[0]) && $args[0]=="portfolio"} class="active" {/if}><a href="{$urlBase}portfolio">Портфолио</a></li>
+                            <li{if isset ($args[0]) && $args[0]=="contacts"} class="active" {/if}><a href="{$urlBase}contacts">Контакты</a></li>
                         </ul>
                     </div>
                 </div>
@@ -106,7 +104,7 @@
         {/if}
         <footer>
             <div class="row">
-				<div class="column_12 text-align-center font-size_11"> Powered by <strong>Sbl0g</strong></div>
+				<div class="column_12 text-align-center font-size_11"> Powered by <strong><a href="https://github.com/sb0y/sblog" target="_blank" rel="nofollow">Sbl0g</a></strong></div>
                 <div class="column_12 text-align-center font-size_11"> Copyright Andrei Bagrintsev aka Sb0y &copy; 2012</div>
                 <div class="clear"></div>
             </div>

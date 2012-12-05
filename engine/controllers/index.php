@@ -26,7 +26,7 @@ class controller_index extends controller_base
 		if (!isset ($this->args[0]))
 		{
 			$this->smarty->setCacheID ("MAINPAGE|offset_0");
-			if (!$this->smarty->isCached ("index.tpl", "MAINPAGE|offset_0"))
+			if (!$this->smarty->isCached ("main.tpl", "MAINPAGE|offset_0"))
 			{
 				$sqlData = index::mainPage();
 				$this->smarty->assign ("posts", $sqlData);

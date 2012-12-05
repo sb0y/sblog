@@ -35,6 +35,7 @@ body {background: #f3f3f3;
 .header .logo,
 .header .header-menu
 {height: 6.78em; width: 100%; border-bottom: 0.5em solid #c93609; position: relative;}
+.header .logo {z-index:99999;display:block}
 .header .logo img {margin: -1em 1em;}
 
 .search-block {padding:20px;margin-top:0.5em; background:#C93609;margin-right:0.5em;}
@@ -196,7 +197,7 @@ input.error {border: 1px solid #981a30;background-color:#EABABA;}
 .content a img:hover {border:4px solid #989898}
 .content a.pic-left img {float:left; margin: 0 10px 0 0;}
 
-.contacts td, th {border: 1px solid #CCC;vertical-align:top;}
+.contacts td, th {border: 1px solid #CCC;vertical-align:middle;}
 .contacts table {margin:10px 0 10px 0;}
 .tbl-content td, tr {border: 0;}
 
@@ -210,3 +211,5 @@ blockquote
 
 blockquote:before { content: open-quote; font-weight: bold; font-size:50px; margin-left:-25px; }
 blockquote:after { content: close-quote; font-weight: bold; margin-right:-25px; float:right; font-size:50px;}
+
+table .table-row-clear {width:65%;text-align:left;}

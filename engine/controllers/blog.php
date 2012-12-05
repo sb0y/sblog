@@ -23,20 +23,19 @@ class controller_blog extends controller_base
 {
 	function index()
 	{	
-		system::setParam ("page", "blog");
+		system::setParam ("page", "post");
 
 		if (!empty ($this->args[0]))
 		{
 			$cacheID = $this->args[0]."|POST";
 			$this->smarty->setCacheID ($cacheID);
 
-			if (!$this->smarty->isCached ($cacheID))
+			if (!$this->smarty->isCached ("post.tpl", $cacheID))
 			{
 				$sqlData = blog::getOnePost ($this->args[0])->fetchAll();
-				system::setParam ("page", "post");
 											
 				if ($sqlData)
-				{	
+				{
 					$sqlData = array_shift ($sqlData);
 					
 					if (isset ($_POST["comment"]))
@@ -61,10 +60,14 @@ class controller_blog extends controller_base
 	{
 		if (!isset ($this->args[1]))
 			redirect ("/");
-		
-		if (!$this->smarty->isCached ("categoryBlog.tpl"))
+
+		$catSlug = $this->args[1];
+		$cacheID = "CATSELECT|$catSlug";
+
+		$this->smarty->setCacheID ($cacheID);
+
+		if (!$this->smarty->isCached ("categoryBlog.tpl", $cacheID))
 		{
-			$catSlug = $this->args[1];
 			$posts = blog::getPostsByCategory ($catSlug)->fetchAll();
 			$this->smarty->assign ("posts", $posts);
 			$this->smarty->assign ("catName", $posts[0]["catName"]);
@@ -76,9 +79,18 @@ class controller_blog extends controller_base
 	function date()
 	{
 		system::setParam ("page", "blogByDate");
-		if (!$this->smarty->isCached ("blogByDate.tpl"))
+		$cacheID = "DTSELECT";
+
+		if (isset ($this->args[1]))
 		{
 			$date = preg_replace ("/[^0-9.]/uims", '', $this->args[1]);
+			$cacheID = $date."|". $cacheID;
+		}
+
+		$this->smarty->setCacheID ($cacheID);
+
+		if (!$this->smarty->isCached ("blogByDate.tpl", $cacheID))
+		{
 			$posts = blog::getPostsByDate ($date)->fetchAll();
 			$this->smarty->assign ("posts", $posts);
 			$this->smarty->assign ("date", $date);
@@ -97,7 +109,7 @@ class controller_blog extends controller_base
 		if (!empty ($_GET["text"]))
 		{
 			$words = $_GET["text"];
-			$cacheID = "SEARCH_RES|".$words;
+			$cacheID = "$words|SEARCH_RES";
 
 			if (mb_strlen ($words) <= 3)
 			{
@@ -105,7 +117,9 @@ class controller_blog extends controller_base
 				return;
 			}
 
-			if (!$this->smarty->isCached ($cacheID))
+			$this->smarty->setCacheID ($cacheID);
+
+			if (!$this->smarty->isCached ("search.tpl", $cacheID))
 			{
 				$res = blog::search ($words);
 
@@ -133,7 +147,7 @@ class controller_blog extends controller_base
 		$cacheID = "MAINPAGE|offset_".$this->args[1];
 		$this->smarty->setCacheID ($cacheID);
 
-		if (!$this->smarty->isCached ("index.tpl", $cacheID))
+		if (!$this->smarty->isCached ("main.tpl", $cacheID))
 		{
 			$sqlData = index::mainPage();
 			$this->smarty->assign ("posts", $sqlData);

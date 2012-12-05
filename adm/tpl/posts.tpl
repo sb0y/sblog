@@ -38,7 +38,7 @@
 	</table>
 		 <p>Всего найдео <strong>{$allCount}</strong> поста(ов)</p>
 		 <p>
-			<a href="javascript:;" id="deleteAllButton">Выделить всё</a>
+			<a href="javascript:;" id="selectAll">Выделить всё</a>
 		 </p>
 		 <p>
 			<form method="POST" id="groupActionsForm">

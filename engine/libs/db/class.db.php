@@ -279,13 +279,13 @@ class db_result extends mysqli_result
 
 function mysqli_establish_connect ($cdb='', $usr="root", $pass='', $chost="localhost")
 {
-    $sql = new db (array ("connect_host"=>$chost, "user"=>$usr, "password"=>$pass, "database"=>$cdb));
+	$sql = new db ($chost, $usr, $pass, $cdb);
 
-    if (mysqli_connect_errno())
-    {
-        printf("Can't connect to MySQL server. Error Message: %s\n", mysqli_connect_error());
-        return false;
-    }
+	if (mysqli_connect_errno())
+	{
+		printf("Can't connect to MySQL server. Error Message: %s\n", mysqli_connect_error());
+		return false;
+	}
 
-    return $sql;
+	return $sql;
 }

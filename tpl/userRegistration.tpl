@@ -14,11 +14,10 @@
 		</div>
 	{/if*}
 	<form method="post" name="registration" action="{$urlBase}user/registration" enctype="multipart/form-data">
-	{assign "sendText" "Зарегистрироваться"}
-	{include file="includes/forms/userForm.tpl"}
+	{include file="includes/forms/userForm.tpl" sendText="Зарегистрироваться" nocache}
 	</form>
 	{else}
-	{include file="ajax/userSuccessRegister.tpl"}
+	{include file="ajax/userSuccessRegister.tpl" nocache}
 	{/if}
 </div>
 {/block}

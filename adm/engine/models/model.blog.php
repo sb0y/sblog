@@ -32,12 +32,10 @@ class blog extends model_base
 	public static function writePost ($post)
 	{
 		unset ($post["savePost"]);
-		unset ($post["picWidth"]);
-		unset ($post["picHeight"]);
 
-		if (self::postExist ("url_name", $post["url_name"]))
+		if (self::postExist ("slug", $post["slug"]))
 		{
-			system::registerEvent ("error", "url_name", "Такой адрес поста уже занят", "URL");
+			system::registerEvent ("error", "slug", "Такой адрес поста уже занят", "URL");
 		}
 		
 		if (empty ($post["title"]))
@@ -311,26 +309,20 @@ class blog extends model_base
 		if (isset ($data["catSlug"]))
 			unset ($data["catSlug"]);
 
-		if (!empty ($data["url_name"]))
+		if (!empty ($data["slug"]))
 		{
-			$data["url_name"] = self::handlePostName ($data["url_name"]);
+			$data["slug"] = self::handlePostName ($data["slug"]);
 
 		} else if (!empty ($data["title"])) {
 
-			$data["url_name"] = self::handlePostName ($data["title"]);
+			$data["slug"] = self::handlePostName ($data["title"]);
 		}
 
 		//self::$db->updateTable ("content", $data, "contentID", $id);
 				
-		self::$db->query ("UPDATE `content` SET `dt`=STR_TO_DATE ('?', '%d-%m-%Y'), `title`='?', url_name='?', `body`='?', `short`='?',
-			`showOnSite`='?' WHERE `contentID`=?", $data["dt"], $data["title"], $data["url_name"], $data["body"], $data["short"], 
+		self::$db->query ("UPDATE `content` SET `dt`=STR_TO_DATE ('?', '%d-%m-%Y'), `title`='?', slug='?', `body`='?', `short`='?',
+			`showOnSite`='?' WHERE `contentID`=?", $data["dt"], $data["title"], $data["slug"], $data["body"], $data["short"], 
 			$data["showOnSite"], $id);
-		
-		
-		self::$smarty->clearCache (null, "MAINPAGE");
-		self::$smarty->clearCache (null, "SEARCH_RES");
-		self::$smarty->clearCache (null, "RSS");
-		self::$smarty->clearCache (null, $data["url_name"]);
 	}
 
 	public static function updateComment ($commentID)
@@ -342,12 +334,12 @@ class blog extends model_base
 
 	public static function saveDraft()
 	{
-		self::$db->query ("INSERT INTO `drafts` SET `contentID`=0, `userID`=?, `title`='?', `url_name`='?', `body`='?', ".
+		self::$db->query ("INSERT INTO `drafts` SET `contentID`=0, `userID`=?, `title`='?', `slug`='?', `body`='?', ".
 			"`dt`=STR_TO_DATE ('?', '%d-%m-%Y'), `draft_add_date`=NOW()", 
-			$_SESSION["user"]["userID"], $_POST["title"], $_POST["url_name"], $_POST["body"], $_POST["dt"]);
+			$_SESSION["user"]["userID"], $_POST["title"], $_POST["slug"], $_POST["body"], $_POST["dt"]);
 	}
 
-	public static function uploadOnePicture ($postName)
+	public static function uploadOnePicture ($postName, $postDir="postImages")
 	{
 		if (!empty ($_POST["picWidth"]))
 			$width = intval ($_POST["picWidth"]);
@@ -357,14 +349,14 @@ class blog extends model_base
 			$heigth = intval ($_POST["picHeight"]);
 		else $heigth = 200;
 
-		$path = CONTENT_PATH."/postImages/$postName/";
+		$path = CONTENT_PATH."/$postDir/$postName/";
 
 		if (!is_dir ($path) || system::dirIsEmpty ($path))
 		{
-			blog::saveDraft();
+			//blog::saveDraft();
 
 			if (!is_dir ($path))
-				mkdir ($path);
+				mkdir ($path, 0777, true);
 		}
 
 		$imageProcessor = new image ($width, $heigth);
@@ -380,7 +372,7 @@ class blog extends model_base
 		{
 			$clause = "`id`=?";
 		} else {
-			$clause = "`url_name`='?'";
+			$clause = "`slug`='?'";
 		}
 		
 		//echo $call;
@@ -414,13 +406,13 @@ class blog extends model_base
 		system::redirect ("/adm/blog/categories");
 	}
 	
-	public static function showAttachedPics ($fill)
+	public static function showAttachedPics ($fill, $picsDir="postImages")
 	{
 		$picFiles = array();
 
-		if (!empty ($fill["url_name"]))
+		if (!empty ($fill["slug"]))
 		{
-			$dir = CONTENT_PATH."/postImages/".$fill["url_name"];
+			$dir = CONTENT_PATH."/$picsDir/".$fill["slug"];
 
 			if (is_dir ($dir))
 			{
@@ -442,6 +434,8 @@ class blog extends model_base
 					}
 				}
 
+				closedir ($dh);
+
 				if (isset ($_GET["delPic"]))
 				{
 					foreach ($picFiles as $k=>$v)
@@ -461,7 +455,7 @@ class blog extends model_base
 				}
 			}
 		}
-				
+		
 		self::$smarty->assign ("picFiles", $picFiles);
 	}
 }

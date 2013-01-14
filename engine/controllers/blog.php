@@ -22,13 +22,19 @@
 class controller_blog extends controller_base 
 {
 	function index()
-	{	
+	{
 		system::setParam ("page", "post");
 
 		if (!empty ($this->args[0]))
 		{
 			$cacheID = $this->args[0]."|POST";
 			$this->smarty->setCacheID ($cacheID);
+
+			if (isset ($_POST["contentID"]))
+			{
+				blog::addComment (intval($_POST["contentID"]));
+				//$this->smarty->clearCache ("post.tpl");
+			}
 
 			if (!$this->smarty->isCached ("post.tpl", $cacheID))
 			{
@@ -37,12 +43,6 @@ class controller_blog extends controller_base
 				if ($sqlData)
 				{
 					$sqlData = array_shift ($sqlData);
-					
-					if (isset ($_POST["comment"]))
-					{
-						blog::addComment ($sqlData["contentID"]);
-						//$this->smarty->clearCache ("post.tpl");
-					}
 					
 					$comments = comments::get ($sqlData["contentID"]);
 					$this->smarty->assign ("comments", $comments);
@@ -111,7 +111,9 @@ class controller_blog extends controller_base
 			$words = $_GET["text"];
 			$cacheID = "$words|SEARCH_RES";
 
-			if (mb_strlen ($words) <= 3)
+			$this->smarty->assign ("searchWord", addslashes($words));
+
+			if (mb_strlen ($words) <= 2)
 			{
 				$this->smarty->assign ("smallWord", true);
 				return;
@@ -123,12 +125,9 @@ class controller_blog extends controller_base
 			{
 				$res = blog::search ($words);
 
-				$this->smarty->assign ("searchWord", addslashes($words));
-
 				if ($res->num_rows > 0)
 				{
 					$posts = $res->fetchAll();
-					$this->smarty->setCacheID ($cacheID);
 					$this->smarty->assign ("searchRes", $posts);
 				}
 			}

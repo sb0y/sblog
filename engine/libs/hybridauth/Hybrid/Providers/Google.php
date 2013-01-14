@@ -13,7 +13,7 @@
 class Hybrid_Providers_Google extends Hybrid_Provider_Model_OAuth2
 {
 	// default permissions 
-	public $scope = "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.google.com/m8/feeds/";
+	public $scope = "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email";
 
 	/**
 	* IDp wrappers initializer 

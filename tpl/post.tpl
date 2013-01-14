@@ -35,7 +35,7 @@
                         </div>
                         <div class="post-data">
                            <div class="padding-20 margin-left-50">
-                                 {$v.dt|date_format:"%d"} {$v.dt|date_format:"%B"|month_declination} в {$v.dt|date_format:"%H:%M"} <a href="{$urlBase}blog/{$post.url_name|urlencode}/#comment_{$v.commentID}" title="Ссылка на комментарий">#</a>
+                                 {$v.dt|date_format:"%d"} {$v.dt|date_format:"%B"|month_declination} в {$v.dt|date_format:"%H:%M"} <a href="{$urlBase}blog/{$post.slug|urlencode}/#comment_{$v.commentID}" title="Ссылка на комментарий">#</a>
                             </div>
                             <div class="padding-10 post-data"><!-- start post-data -->
                                 {$v.body}
@@ -46,11 +46,12 @@
                 {foreachelse}
                     <p class="text-align-center padding-top-20">Статью пока никто не комментировал. Ваш комментарий может стать первым.</p>
                 {/foreach}
-                    {if isset ($smarty.session.user)}
+                    {if isset ($smarty.session.user) nocache}
                         <div class="clear"></div>
                         <br />
                         <div id="comment-textarea">
                             <form method="post">
+                                <input type="hidden" value="{$post.contentID}" name="contentID" />
                                 <textarea name="comment" class="comment-area" tabindex="4"></textarea>
                                 <div class="submit comment-submit">
                                     <button type="submit" class="submit">Отправить</button>

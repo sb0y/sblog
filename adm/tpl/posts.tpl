@@ -11,7 +11,7 @@
 	<table width="100%">
 	<thead>
 		<tr>
-			<th><a href="{$urlBase}blog/posts?sort=title&direction={$direction}">Загловок{if $sort=="title"} <img src="/adm/resources/img/icons/arrow_{if $direction=="ASC" && $sort==title}down{else}up{/if}_mini.gif" width="16" height="16" align="absmiddle" />{/if}</th>
+			<th><a href="{$urlBase}blog/posts?sort=title&direction={$direction}">Заголовок{if $sort=="title"} <img src="/adm/resources/img/icons/arrow_{if $direction=="ASC" && $sort==title}down{else}up{/if}_mini.gif" width="16" height="16" align="absmiddle" />{/if}</th>
 			
 			<th><a href="{$urlBase}blog/posts?sort=dt&direction={$direction}">Дата{if $sort=="dt"} <img src="/adm/resources/img/icons/arrow_{if $direction=="ASC" && $sort==dt}down{else}up{/if}_mini.gif" width="16" height="16" align="absmiddle" />{/if}</a></th>
 			
@@ -27,7 +27,7 @@
 				<td>{$value.dt}</td>
 				<td>{$value.comments_count}</td>
 				<td align="center">
-					<a target="_blank" href="/blog/{$value.url_name}"><img src="/adm/resources/img/icons/page_white_link.png" title="Ссылка на статью" width="16" height="16"></a>
+					<a target="_blank" href="/blog/{$value.slug}"><img src="/adm/resources/img/icons/page_white_link.png" title="Ссылка на статью" width="16" height="16"></a>
 					<a href="{$urlBase}blog/editPost?contentID={$value.contentID}"><img src="/adm/resources/img/icons/page_white_edit.png" title="Редактировать статью" width="16" height="16"></a>
 					<a href="{$urlBase}blog/posts?action=delete&contentID={$value.contentID}" onclick="return confirm ('Вы уверенны?')"><img src="/adm/resources/img/icons/page_white_delete.png" title="Удалить статью" width="16" height="16"></a>
 					<a href="/adm/blog/showPostComments/{$value.contentID}"><img src="/adm/resources/img/icons/folder_page.png" title="Посмотреть комментарии к статье" width="16" height="16"></a>

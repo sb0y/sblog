@@ -21,14 +21,14 @@
 {foreach $items as $key=>$item}
 <item>
 	<title>{$item.title}</title>
-	<link>{$urlBase}blog/{$item.url_name}/</link>
+	<link>{$urlBase}blog/{$item.slug}/</link>
 	<description>{$item.short|strip_tags:false|replace:"\r\n":''|replace:"\n":''}</description>
 	<content:encoded><![CDATA[[{$item.body}]]></content:encoded>
 	<pubDate>{$item.tms|date_format:"r"}</pubDate>
 	{*<dc:creator>'.$creator.'</dc:creator>*}
 	{foreach $item.cats as $k=>$v}<category><![CDATA[{$v.catName}]]></category>{/foreach}
-	<comments>{$urlBase}blog/{$item.url_name}</comments>
-	<guid isPermaLink="false">{$urlBase}blog/{$item.url_name}</guid>
+	<comments>{$urlBase}blog/{$item.slug}</comments>
+	<guid isPermaLink="false">{$urlBase}blog/{$item.slug}</guid>
 </item>
 {/foreach}
 

@@ -24,7 +24,7 @@
 
 class ajax extends model_base
 {
-	public static function start ()
+	public static function start()
 	{
 		
 	}
@@ -34,4 +34,60 @@ class ajax extends model_base
 		print_r ($_FILES);
 	}
 
+	public static function picture()
+	{
+		if (!portfolio::initialVerify (true))
+		{
+			echo '<script type="text/javascript">parent.pupld.uploadError ("'.addslashes(json_encode(system::$errors)).'")</script>';
+			return;
+		}
+
+		if (isset ($_POST["ajaxFileUpload"]) && isset ($_POST["pageDir"]))
+		{
+			$uploadedPics = blog::uploadOnePicture ($_POST["slug"], $_POST["pageDir"]);
+			$uploadedPics["itemName"] = $_POST["slug"];
+
+			if (!empty ($uploadedPics))
+			{
+				echo '<script type="text/javascript">parent.pupld.uploadFinished ("'.addslashes(json_encode($uploadedPics)).'")</script>';
+			}
+		}
+	}
+
+	public static function deletePicture()
+	{
+		if (!isset ($_POST["pictureDelete"]) || 
+			!isset ($_POST["picsDir"]) ||
+			!isset ($_POST["dirName"]))
+		{
+			return;
+		}
+
+		$dir = CONTENT_PATH."/".$_POST["picsDir"]."/".$_POST["dirName"];
+
+		if (is_dir($dir))
+		{
+			$dh = opendir ($dir);
+			while (false !== ($filename = readdir($dh)))
+			{
+				if ($filename == '.' || $filename == "..")
+					continue;
+
+				$fl = explode ('.', $filename);
+
+				if ($fl[0] == $_POST["pictureDelete"])
+				{
+					unlink ($dir."/".$filename);
+
+					if (file_exists($dir."/".$fl[0]."_small.jpeg"))
+						unlink ($dir."/".$fl[0]."_small.jpeg");
+					
+					echo "Ok";
+					break;
+				}
+			}
+
+			closedir ($dh);
+		}
+	}
 }

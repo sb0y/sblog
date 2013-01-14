@@ -2,7 +2,6 @@ $(function()
 {
 	$(".file").bind ("change", function()
 	{
-		alert ("hre");
 		$.ajaxFileUpload
 		(
 			{

@@ -44,7 +44,7 @@ class router extends core {
 				switch ($e->getCode())
 				{
 					case 404:
-						system::redirect (system::param("urlBase")."blog/search?text=".urlencode($this->routePath),
+						system::redirect ("http://".system::param("siteDomain")."/blog/search?text=".urlencode($this->routePath),
 							5, "Упс! Такого документа на этом сайте нет. Сейчас мы попробуем поискать что-то похожее.");
 						$this->smarty->setCacheID ("REDIRECT|404");
 						system::setParam ("page","redirect");

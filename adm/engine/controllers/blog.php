@@ -33,13 +33,13 @@ class controller_blog extends controller_base
 		$fill = array();
 		$doRedirect = false;
 
-		if (!empty ($_POST["url_name"]))
+		if (!empty ($_POST["slug"]))
 		{
-			$_POST["url_name"] = blog::handlePostName ($_POST["url_name"]);
+			$_POST["slug"] = blog::handlePostName ($_POST["slug"]);
 
 		} else if (!empty ($_POST["title"])) {
 
-			$_POST["url_name"] = blog::handlePostName ($_POST["title"]);
+			$_POST["slug"] = blog::handlePostName ($_POST["title"]);
 		}
 
 		if (isset ($_GET["draftID"]) || isset ($_GET["draftName"]))
@@ -51,9 +51,9 @@ class controller_blog extends controller_base
 			$fill = $_POST;
 		}
 
-		if (isset ($_POST["uploadPicture"]))
+		if (isset ($_POST["picRealUpload"]))
 		{
-			$uploadedPics = blog::uploadOnePicture ($_POST["url_name"]);
+			$uploadedPics = blog::uploadOnePicture ($_POST["slug"]);
 		}
 
 		if (isset ($_POST["savePost"]))
@@ -101,7 +101,7 @@ class controller_blog extends controller_base
 
 		if (isset ($_POST["uploadPicture"]))
 		{
-			$uploadedPics = blog::uploadOnePicture ($_POST["url_name"]);
+			$uploadedPics = blog::uploadOnePicture ($_POST["slug"]);
 		}
 
 		blog::getAllCats ($id);
@@ -109,8 +109,13 @@ class controller_blog extends controller_base
 		$sqlData = blog::buildForm ("content", "AND `contentID`=$id");
 				
 		blog::showAttachedPics ($sqlData);
-		
-		if ($doRedirect)
+	
+		$this->smarty->clearCache (null, "MAINPAGE");
+        $this->smarty->clearCache (null, "SEARCH_RES");
+        $this->smarty->clearCache (null, "RSS");
+        $this->smarty->clearCache (null, $sqlData["slug"]);
+    
+        if ($doRedirect)
 			system::redirect (system::param ("urlBase")."posts");
 	}
 
@@ -135,15 +140,15 @@ class controller_blog extends controller_base
 		if (!$id)
 			return false;
 
-		$url_name = $this->db->query ("SELECT `url_name` FROM `content` WHERE `contentID`=?", $id)->fetch();
-		$url_name = $url_name["url_name"];
+		$slug = $this->db->query ("SELECT `slug` FROM `content` WHERE `contentID`=?", $id)->fetch();
+		$slug = $slug["slug"];
 
 		$prefix = '';
 		if (isset ($_GET["prefix"]))
 			$prefix = urldecode ($_GET["prefix"]);
 
-		if ($url_name)
-			system::redirect ("/blog/$url_name$prefix");
+		if ($slug)
+			system::redirect ("/blog/$slug$prefix");
 		else return false;
 
 		return true;

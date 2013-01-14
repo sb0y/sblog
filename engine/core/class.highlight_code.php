@@ -124,6 +124,9 @@ class highlight_code
 				$constructSymbols = array ("else");
 			break;
 
+			//case ($lang == "cpp-qt" || $lang == "cpp"):
+
+
 			case "html4strict":
 			break;
 
@@ -145,9 +148,8 @@ class highlight_code
 			$blockCloseSymbols = array (')');
 		}
 
-		$result = $lineRes = $inc = '';
+		$result = $lineRes = $inc = $blockName = '';
 		$blockShift = $i = 0;
-		$lastIter = false;
 
 		$lines = explode ("\n", $string);
 		$linesCnt = count ($lines);
@@ -161,6 +163,11 @@ class highlight_code
 				case '+':
 					++$blockShift;
 					$inc = '';
+					if (preg_match ("/^([a-z]{2,})[ \\)]+/Uuis", $line, $matches))
+					{
+						 $blockName = trim (array_pop ($matches));
+					} 
+
 				break;
 					
 				case '-':
@@ -179,12 +186,12 @@ class highlight_code
 				--$blockShift;
 			}
 
-
 			$len = mb_strlen ($line);
 			for ($i=0; $len>$i; ++$i)
 			{
 				$s = mb_substr ($line, $i, 1);
 				$sp1 = mb_substr ($line, $i+1, 1);
+				$sp2_size2 = mb_substr ($line, $i+2, 2);
 				$sm1 = mb_substr ($line, $i-1, 1);
 
 				if (in_array(trim($s), $blockOpenSymbols))
@@ -193,8 +200,15 @@ class highlight_code
 				}
 
 				//  offset from the block
-				if ($s=='}' && $sp1!="\n")
-					$s.="\n";
+				if (($s=='}' || $s=='{') && ($sp1!="\n" && $sp1==';'))
+				{
+					$s .= "\n";
+				}
+
+				if ($blockName == "if" && $sp2_size2 == "if")
+				{
+					$s = "\n$s";
+				}
 
 				if (in_array(trim($s), $blockCloseSymbols))
 				{
@@ -203,6 +217,9 @@ class highlight_code
 
 				$lineRes .= $s;
 			}
+
+			if (!trim ($lineRes)) // do not hanling empty strings
+				continue;
 
 			if (in_array ($line, $constructSymbols))
 				$blockShift--;
@@ -215,8 +232,12 @@ class highlight_code
 			if (in_array ($line, $constructSymbols))
 				$blockShift++;
 
-			$result .= $lineRes."\n";
+			if ($len == $i && $blockName != "class")
+			{
+				$lineRes .= "\n";
+			}
 
+			$result .= $lineRes;
 			$lineRes = '';
 		}
 

@@ -267,11 +267,18 @@ class db_result extends mysqli_result
 				--$limit;
 		}
 
-		for ($i=0; (!empty ($this->runAfterFetchAll) && count ($this->runAfterFetchAll) >= $i); ++$i)
+		/*for ($i=0; (count ($this->runAfterFetchAll) > $i); ++$i)
+		{
 			$rows = $this->runAfterFetchAll ($rows);
+		}*/
 
-		for ($i=0; (!empty ($this->runAfterFetch) && count ($this->runAfterFetch) >= $i); ++$i)
-			$rows = $this->runAfterFetch ($rows);
+		while (!empty ($this->runAfterFetchAll))
+		{
+			$rows = $this->runAfterFetchAll ($rows);
+		}
+
+		//for ($i=0; (!empty ($this->runAfterFetch) && count ($this->runAfterFetch) > $i); ++$i)
+		//	$rows = $this->runAfterFetch ($rows);
 		
 		return $rows;
 	}

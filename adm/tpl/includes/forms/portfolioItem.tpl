@@ -4,7 +4,7 @@
 <form id="form" class="form" method="post" enctype="multipart/form-data">
 	<fieldset id="writePost">
 		<p>
-			<label for="title">Заголовок поста</label>
+			<label for="title">Заголовок</label>
 			<input class="text" id="title" name="title" type="text" value="{fromPost var='title' arr=$fill}" />
 		</p>
 
@@ -14,19 +14,13 @@
 		</p>
 
 		<p>
-			<label for="category">Категория</label>
-			<select name="categories[]" id="catSelect" multiple="multiple">
-			{foreach $cats as $key => $value}
-				<option value="{$value.categoryID}"{if isset ($value.catSel) && $value.catSel>0} selected="selected"{/if}>{$value.catName}</option>
-			{/foreach}
-			</select>
-			<a id="showCatEntry" href="javascript:;">Добавить новую категорию</a>&nbsp;
-			<span id="newCatInput"><input type="text" id="catName" name="catName" />&nbsp;<input type="text" id="catSlug" name="catSlug" />&nbsp;<button type="button" title="добавить" id="addCat"></button></span>
+			<label for="dt">Дата</label>
+			<input class="text" id="dt" name="dt" type="text" value="{if !isset ($fill.dt)}{$smarty.now|date_format:"%d-%m-%Y"}{else}{{fromPost var='dt' arr=$fill}|date_format:"%d-%m-%Y"}{/if}" />
 		</p>
 
 		<p>
-			<label for="dt">Дата</label>
-			<input class="text" id="dt" name="dt" type="text" value="{if !isset ($fill.dt)}{$smarty.now|date_format:"%d-%m-%Y"}{else}{{fromPost var='dt' arr=$fill}|date_format:"%d-%m-%Y"}{/if}" />
+			<label for="shortBody">Аннотация</label>
+			<textarea id="shortBody" name="shortBody">{fromPost var='shortBody' arr=$fill}</textarea>
 		</p>
 
 		<p>
@@ -46,23 +40,20 @@
    		</p>
 	</fieldset>
 	
-	<fieldset id="uploadedPics">
+	<fieldset id="uploadedPics"{if !empty ($picFiles)} style="display:block;"{/if}>
 		<legend>Загруженные картинки</legend>
 		<div id="pics">
-		{if !empty ($picFile)}
-		{literal}<style>
-			#pics{display:block}
-		</style>{/literal}
+		{if !empty ($picFiles)}
 		{foreach $picFiles as $k=>$v}
-		<div id="pic-windows">
-			<a target="_blank" href="/content/postImages/{$fill.slug}/{$v.big}">
-				<img src="/content/postImages/{$fill.slug}/{if isset ($v.small)}{$v.small}{else}{$v.big}{/if}" />
+		<div class="pic-windows">
+			<a target="_blank" href="/content/portfolioPics/{$fill.slug}/{$v.big}">
+				<img src="/content/portfolioPics/{$fill.slug}/{if isset ($v.small)}{$v.small}{else}{$v.big}{/if}" />
 			</a><a id="{$k}" class="deletePic" href="javascript:;"><img src="/adm/resources/img/icons/erase.png" /></a>
 			<br />
 			{if isset ($v.small)}<b>Код для полноразмерной картинки:</b><br />
-			<input class="auto-select" name="" value='<img src="/content/postImages/{$fill.slug}/{$v.big}" />' size="70" /><br />{/if}
+			<input class="auto-select" name="" value='<img src="/content/portfolioPics/{$fill.slug}/{$v.big}" />' size="70" /><br />{/if}
 			<b>Код для превью:</b><br />
-			<input class="auto-select" name="" value='<a href="/content/postImages/{$fill.slug}/{$v.big}"><img src="/content/postImages/{$fill.slug}/{$v.small}" /></a>' size="70" />
+			<input class="auto-select" name="" value='<a href="/content/portfolioPics/{$fill.slug}/{$v.big}"><img src="/content/portfolioPics/{$fill.slug}/{$v.small}" /></a>' size="70" />
 		</div>
 		{/foreach}
 		{/if}

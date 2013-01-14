@@ -2,16 +2,19 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-{nocache}<title>{block name=title}Главная страница админки{/block}</title>{/nocache}
+<title>{block name=title nocache}Главная страница админки{/block}</title>
 <link rel="stylesheet" type="text/css" href="{$urlBase}resources/css/theme.css" />
 <link rel="stylesheet" type="text/css" href="{$urlBase}resources/css/style.css" />
 <script type="text/javascript" src="/resource/js/css_browser_selector.js"></script>
 <script type="text/javascript" src="/resource/js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript">
+var urlBase = "{$urlBase}";
+</script>
 <script type="text/javascript" src="/adm/resources/js/scripts.js"></script>
-<!--[if IE]>
+{*<!--[if IE]>
 <link rel="stylesheet" type="text/css" href="{$urlBase}resources/css/ie-sucks.css" />
-<![endif]-->
-{nocache}{block name=pageScripts}{/block}{/nocache}
+<![endif]-->*}
+{block name=pageScripts nocache}{/block}
 </head>
 
 <body>
@@ -28,15 +31,15 @@
             <div id="panel">
                 <ul>
                     <li><a href="{$urlBase}blog/writePost" class="report">Написать новый пост</a></li>
-                    {*<li><a href="#" class="report_seo">SEO Report</a></li>
-                    <li><a href="#" class="search">Search</a></li>
+                    <li><a href="{$urlBase}portfolio/addItem" class="report_seo">Добавить в портфолио</a></li>
+                    {*<li><a href="#" class="search">Search</a></li>
                     <li><a href="#" class="feed">RSS Feed</a></li>*}
                 </ul>
             </div>
 		</div>
         <div id="wrapper">
             <div id="content">
-                {nocache}{if !empty($errors)}
+                {if !empty($errors) nocache}
                     <h3>Не удалось выполнить запрошенную операцию</h3><br />
                     <div class="error-block">
                     <ul>
@@ -45,7 +48,7 @@
                         {/foreach}
                         </ul>
                     </div>
-                {/if}{/nocache}
+                {/if}
 				{block name=body}
                 <p>&nbsp;</p>
                 <p>&nbsp;</p>
@@ -62,13 +65,13 @@
                             {*<li><a href="#" class="search">Search</a></li>*}
                         </ul>
                     </li>
-                    {*<li><h3><a href="#" class="folder_table">Комментарии</a></h3>
+                    <li><h3><a href="$urlBase}portfolio" class="folder_table">Портфолио</a></h3>
 						<ul>
-							<li><a href="#" class="addorder">Последние комментарии</a></li>
-							<li><a href="#" class="shipping">Shipments</a></li>
-							<li><a href="#" class="invoices">Invoices</a></li>
+                            <li><a href="{$urlBase}portfolio/addItem" class="addorder">Добавить объект</a></li>
+							<li><a href="{$urlBase}portfolio" class="invoices">Все объекты портфолио</a></li>
+							{*<li><a href="#" class="shipping">Invoices</a></li>*}
 						</ul>
-                    </li>*}
+                    </li>
                    <li><h3><a href="#" class="manage">Настройки</a></h3>
           				<ul>
                             <li><a href="{$urlBase}blog/categories" class="manage_page">Категории</a></li>

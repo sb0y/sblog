@@ -19,7 +19,7 @@
     <link rel="apple-touch-icon" sizes="114x114" href="{$urlBase}resource/images/apple-touch-icon-114x114.png">
 
     <!--=== TITLE ===-->
-    <title>{block name=title nocache}Bagrintsev Blog{/block}</title>
+    <title>{block name=title}Bagrintsev Blog{/block}</title>
 
     <link href='http://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic' rel='stylesheet' type='text/css'>
     <link rel='stylesheet' id='droid-font-css'  href='http://fonts.googleapis.com/css?family=Droid+Serif%3A400%2C400italic%2C700&#038;ver=1' type='text/css' media='all' />
@@ -31,7 +31,7 @@
     <link rel="stylesheet"  href="{$urlBase}resource/css/standart-styles.css" type="text/css" media="all" />
 	<link rel="stylesheet"  href="{$urlBase}resource/css/geshi.css" type="text/css" media="all" />
     
-    <!--[if gte IE 8]><script src="{$urlBase}oldies/oldies.js" charset="utf-8"></script><![endif]-->
+    <!--[if lte IE 8]><script src="{$urlBase}oldies/oldies.js" charset="utf-8"></script><![endif]-->
     <script type="text/javascript" src="{$urlBase}resource/js/css_browser_selector.js"></script>
     <script type="text/javascript" src="{$urlBase}resource/js/jquery-1.7.2.min.js"></script>
     <script type="text/javascript" src="{$urlBase}resource/js/scripts.js"></script>
@@ -108,6 +108,34 @@
                 <div class="column_12 text-align-center font-size_11"> Copyright Andrei Bagrintsev aka Sb0y &copy; 2012</div>
                 <div class="clear"></div>
             </div>
+            {literal}
+            <!-- Yandex.Metrika counter -->
+            <script type="text/javascript">
+            (function (d, w, c) {
+                (w[c] = w[c] || []).push(function() {
+                    try {
+                        w.yaCounter18757720 = new Ya.Metrika({id:18757720,
+                                webvisor:true,
+                                clickmap:true,
+                                accurateTrackBounce:true});
+                    } catch(e) { }
+                });
+
+                var n = d.getElementsByTagName("script")[0],
+                    s = d.createElement("script"),
+                    f = function () { n.parentNode.insertBefore(s, n); };
+                s.type = "text/javascript";
+                s.async = true;
+                s.src = (d.location.protocol == "https:" ? "https:" : "http:") + "//mc.yandex.ru/metrika/watch.js";
+
+                if (w.opera == "[object Opera]") {
+                    d.addEventListener("DOMContentLoaded", f, false);
+                } else { f(); }
+            })(document, window, "yandex_metrika_callbacks");
+            </script>
+            <noscript><div><img src="//mc.yandex.ru/watch/18757720" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+            <!-- /Yandex.Metrika counter -->
+            {/literal}
         </footer>
     </div></div>
 </html>

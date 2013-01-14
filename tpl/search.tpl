@@ -20,7 +20,7 @@
                     <p>{$item.short}</p>
                 </div>
                 <div class="post-read-more">
-                    <a href="{$urlBase}blog/{$item.url_name|urlencode}">Читать дальше</a>
+                    <a href="{$urlBase}blog/{$item.slug|urlencode}">Читать дальше</a>
                 </div>
             </div>
         </article>

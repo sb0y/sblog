@@ -126,7 +126,7 @@ class user extends model_base
 		
 		if ($res->num_rows <= 0)
 		{		
-			//$login = $data->displayName;
+			//echo $data->identifier;
 			$nick = trim ($data->firstName.' '.$data->lastName);
 			
 			if ($data->emailVerified)

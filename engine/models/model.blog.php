@@ -2,7 +2,8 @@
 class blog extends model_base
 {
 	public static $htmlParser = null;
-	
+	public static $highlightWords = null;
+
 	public static function start()
 	{
 		if (is_null(self::$htmlParser))
@@ -16,7 +17,7 @@ class blog extends model_base
 		if (is_numeric ($get))
 			$mode = "contentID";
 		else if (is_string ($get))
-			$mode = "url_name";
+			$mode = "slug";
 				
 		$sqlData = self::$db->query ("SELECT * FROM `content` as c, `content_category` as cc, `categories` as cts WHERE c.`$mode`='?' ".
 		"AND cc.`contentID`=c.`contentID` AND cts.`categoryID`=cc.`catID`", $get);
@@ -144,12 +145,15 @@ class blog extends model_base
 		$query = trim (preg_replace ("/\s(\S{1,3})\s/", " ", preg_replace ("/ +/", "  ", " $query ")));
 		$query = preg_replace ("/ +/", " ", $query);
 
+		self::$highlightWords = str_replace (" ", "|", $query);
+
 		$res = self::$db->query ("SELECT *, co.`contentID`, cc.`catID`, MATCH (`title`,`body`,`author`) AGAINST ('?') as rel
 			FROM `content` as co JOIN `content_category` as cc INNER JOIN `categories` as c ON c.`categoryID`=cc.`catID` AND cc.`contentID`=co.`contentID`
 			WHERE MATCH (`title`,`body`,`author`) AGAINST ('?') > 0", $query, $query);
 
 		$res->runAfterFetchAll[] = array("blog", "buildCatsArray");
 		$res->runAfterFetchAll[] = array("blog", "arrayUnique");
+		$res->runAfterFetchAll[] = array("blog", "highlightBodyForSearch");
 
 		return $res;
 	}
@@ -169,14 +173,40 @@ class blog extends model_base
 		if (!$comment)
 			return false;
 
-		self::$db->query ("INSERT `comments` SET `contentID`=?, `userID`=?, `dt`=NOW(), `email`='?', `author`='?', `body`='?', `guest`='N' , `ip`=INET_ATON('?')", 
+		self::$db->query ("INSERT `comments` SET `contentID`=?, `userID`=?, `dt`=NOW(), `email`='?', `author`='?', `body`='?', `guest`='N', `ip`=INET_ATON('?')", 
 			$contentID, $_SESSION["user"]["userID"], $_SESSION["user"]["email"], $_SESSION["user"]["nick"], $comment, $insip);
 
 		$commentID = self::$db->insert_id();
 
-		self::$db->query ("UPDATE `content` set `comments_count`=`comments_count`+1 WHERE `contentID`=?", $contentID);
+		self::$db->query ("UPDATE `content` SET `comments_count`=`comments_count`+1 WHERE `contentID`=?", $contentID);
 		self::$smarty->clearCurrentCache();
 		system::redirect (self::$routePath."#comment_$commentID");
+	}
+
+	public static function highlightBodyForSearch (&$array=array())
+	{
+		if (!$array)
+			return array();
+
+		if (is_null(self::$highlightWords))
+			return $array;
+
+		$words = explode (" ", self::$highlightWords);
+
+		foreach ($words as $k=>$v)
+		{
+			$words[$k] = '/(?![^<]*<\/.*>)({$v})/';
+		}
+
+		foreach ($array as $k=>$v)
+		{
+			//preg_replace ("/ +/", " ", $query);
+			$array[$k]["short"] = preg_replace ($words, "<font color=#cc0000>$0</font>", $v["short"]);
+		}
+
+		self::$highlightWords = null;
+
+		return $array;
 	}
 	
 }

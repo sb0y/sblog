@@ -163,6 +163,7 @@ class image
 				if ($this->extendFormat ($v["tmp_name"]))
 				{
 					$this->currentImgInfo["file"] = $this->processImage ($v["tmp_name"]);
+					$outNames[$k] = $this->currentImgInfo["file"];
 				}
 				
 			} else {

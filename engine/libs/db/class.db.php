@@ -44,6 +44,16 @@ class db extends MySQLi
 	   	//mysqli_report (MYSQLI_REPORT_ALL);
 	}
 
+	function hex2string ($str)
+	{
+		return str_replace ("%3F", "?", $str);
+	}
+
+	function string2hex ($str)
+	{
+		return str_replace ("?", "%3F", $str);
+	}
+
 	function init ($configArray=null)
 	{
 		if ($this->inited)
@@ -86,9 +96,9 @@ class db extends MySQLi
 			
 		foreach ($args as $k=>$v)
 		{	
-			$v = urldecode ($v);
+			$v = $this->string2hex ($v);
 			$this->escape_string ($v);
-			$tmp[$k] .= urldecode ($v);	
+			$tmp[$k] .= $this->string2hex ($v);	
 		}
 				
 		$query = implode ('', $tmp);
@@ -107,7 +117,7 @@ class db extends MySQLi
 		{
 			foreach ($args as $k=>$v)
 			{
-				$args[$k] = urlencode ($args[$k]);
+				$args[$k] = $this->hex2string ($args[$k]);
 			}
 							
 			$this->replaceVars ($query, $args);

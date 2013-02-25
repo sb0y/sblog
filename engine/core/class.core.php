@@ -80,6 +80,8 @@ class core
 	{
 		$mails =& system::$emails;
 		
+		//print_r($mails);
+
 		if (empty ($mails))
 			return;
 		

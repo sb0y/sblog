@@ -84,7 +84,7 @@
         <div class="row">
             <div class="search-block float-right">
                 <form method="get" action="{$urlBase}blog/search">
-                    <input name="text" type="text" id="search"{if isset ($searchWord)} value="{$searchWord}" {/if}/><button type="submit">Найти</button>
+                    <input name="text" type="text" id="search"{if isset ($searchWord) nocache} value="{$searchWord}" {/if}/><button type="submit">Найти</button>
                  </form>
             </div>
         </div>
@@ -105,7 +105,7 @@
         <footer>
             <div class="row">
 				<div class="column_12 text-align-center font-size_11"> Powered by <strong><a href="https://github.com/sb0y/sblog" target="_blank" rel="nofollow">Sbl0g</a></strong></div>
-                <div class="column_12 text-align-center font-size_11"> Copyright Andrei Bagrintsev aka Sb0y &copy; 2012</div>
+                <div class="column_12 text-align-center font-size_11"> Copyright Andrei Bagrintsev aka Sb0y &copy; 2012-{$smarty.now|date_format:"%Y"}</div>
                 <div class="clear"></div>
             </div>
             {literal}

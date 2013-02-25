@@ -1,2 +1,3 @@
 p { margin:0 0 1em 0; padding:0; line-height:200%; }
 strong {font-weight:bold;}
+br {display:block;margin: 0;padding:0;line-height:22px;content: " ";}

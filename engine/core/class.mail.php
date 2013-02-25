@@ -23,7 +23,7 @@
  class mail extends core
  {
 	public $smtpServer = "localhost", $smtpPort = 25, $smtpUser = '', $smtpPass = '', $fromTitle = "noreply", $codepage = "UTF-8", 
-	$fromEmail = "noreply@bagrincev.ru", $contentType = "text/html", $emailTitle = '';
+	$fromEmail = "noreply@bagrintsev.me", $contentType = "text/html", $emailTitle = '';
 	private $headers = array(), $userHeaders = array(), $smtpConnection = null;
 	
 	function __construct()
@@ -121,11 +121,14 @@
 		
 		if ($this->smtpConnection) 
 		{
+
 			$headers = implode ("\r\n", $this->headers);
 			$ip = gethostbyname ($this->smtpServer);
 			$host = gethostbyaddr ($ip);
-			$ehlo = explode ('@', $to);
-			$ehlo = trim ($ehlo[1]);
+			//$ehlo = explode ('@', $to);
+			//$ehlo = trim ($ehlo[1]);
+			$ehlo = explode ('@', $this->fromEmail);
+			$ehlo = $ehlo[1];
 			
 			fputs ($this->smtpConnection, "EHLO $ehlo\r\n"); 
 			$talk["hello"] = fgets ( $this->smtpConnection, 1024 );
@@ -153,6 +156,8 @@
 			fputs ($this->smtpConnection, $headers."\r\n\r\n\r\n".$body."\r\n.\r\n");
 			$talk["send"] = fgets ($this->smtpConnection, 256);
 		}
+
+		//print_r($talk);
 				
 		return $talk;
 	}

@@ -3,7 +3,7 @@
 {block name=body}
 <div class="posts-list post">
 	<p><h2 class="page-title">Регистрация нового пользователя</h2></p>
-	{if !isset ($successReg)}
+	{if !isset ($successReg) nocache}
 	{*if !empty($errors)}
 		<div class="error-block">
 		<ul>

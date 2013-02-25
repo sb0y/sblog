@@ -109,14 +109,14 @@ class controller_blog extends controller_base
 		if (!empty ($_GET["text"]))
 		{
 			$words = $_GET["text"];
-			$cacheID = "$words|SEARCH_RES";
+			$cacheID = "SEARCH_RES|$words";
 
 			$this->smarty->assign ("searchWord", addslashes($words));
 
 			if (mb_strlen ($words) <= 2)
 			{
 				$this->smarty->assign ("smallWord", true);
-				return;
+				return false;
 			}
 
 			$this->smarty->setCacheID ($cacheID);

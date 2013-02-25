@@ -280,7 +280,7 @@ class blog extends model_base
 
 	public static function updatePost ($id, $data)
 	{
-		if (isset ($data["savePost"]))
+        if (isset ($data["savePost"]))
 			unset ($data["savePost"]);
 			
 		if (isset ($data["picWidth"]))

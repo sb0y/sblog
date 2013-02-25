@@ -46,13 +46,13 @@
                 {foreachelse}
                     <p class="text-align-center padding-top-20">Статью пока никто не комментировал. Ваш комментарий может стать первым.</p>
                 {/foreach}
-                    {if isset ($smarty.session.user) nocache}
+                    {nocache}{if isset ($smarty.session.user)}
                         <div class="clear"></div>
                         <br />
                         <div id="comment-textarea">
-                            <form method="post">
+                            <form method="post">{/nocache}
                                 <input type="hidden" value="{$post.contentID}" name="contentID" />
-                                <textarea name="comment" class="comment-area" tabindex="4"></textarea>
+                                {nocache}<textarea name="comment" class="comment-area" tabindex="4"></textarea>
                                 <div class="submit comment-submit">
                                     <button type="submit" class="submit">Отправить</button>
                                 </div>
@@ -60,7 +60,7 @@
                         </div>
                         {else}
                         <p class="text-align-center"><a href="javascript:;" class="loginButton">Войдите</a> или <a target="_blank" href="{$urlBase}user/registration">зарегистрируйтесь</a>, чтобы написать комментарий.</p>
-                    {/if}
+                    {/if}{/nocache}
      </div></div>
      {else}
 		<p>По вашему запросу ничего не найдено.</p>

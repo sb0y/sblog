@@ -38,10 +38,10 @@ class index extends model_base
 
 		$sqlData = blog::getPosts ($mysqlLimits)->fetchAll();
 		
-		if ($sqlData)
-		{	
-			blog::highlightCode ($sqlData, "short");
-		}
+		//if ($sqlData)
+		//{	
+			//blog::highlightCode ($sqlData, "short");
+		//}
 
 		return $sqlData;
 	}

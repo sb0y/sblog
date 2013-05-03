@@ -36,6 +36,11 @@ class controller_rss extends controller_base
 		
 		echo $this->smarty->fetch (TPL_PATH."/rss/rssMain.tpl", "RSS|MAINPAGE");
 	}
+
+	function start()
+	{
+		
+	}
 	
 	function requestModels (&$modelsNeeded)
 	{

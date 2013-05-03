@@ -37,6 +37,11 @@ class controller_index extends controller_base
 			system::setParam ("page", "static/".$this->args[0]);
 		}
 	}
+
+	function start()
+	{
+		
+	}
 	
 	function registration()
 	{

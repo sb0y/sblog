@@ -50,7 +50,7 @@ define ("CONTENT_PATH", ROOT_PATH."/content" );
 define ("TMP_PATH", ROOT_PATH."/tmp" );
 
 
-#error_reporting(E_ALL); ini_set('display_errors', 1);
+error_reporting(E_ALL); ini_set('display_errors', 1);
 
 date_default_timezone_set ("Europe/Moscow");
 setlocale (LC_ALL, "ru_RU.UTF-8");

@@ -175,7 +175,7 @@ class blog extends model_base
 		$mysqlLimits = array();
 		$offset = 0;
 		$allCount = self::$db->query ("SELECT COUNT(*) as cnt FROM `$target` WHERE 1 ".$clause)->fetch();
-		$pageCompose = new pagination ($allCount["cnt"]);
+        $pageCompose = new pagination ($allCount["cnt"]);
 		$sort = $columns[0]["Field"];
 		$direction = "DESC";
 

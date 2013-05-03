@@ -44,4 +44,5 @@ abstract class controller_base
 
 	abstract function index();
 	abstract function requestModels (&$modelsNeeded);
+	abstract function start();
 }

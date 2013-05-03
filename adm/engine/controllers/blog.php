@@ -86,7 +86,7 @@ class controller_blog extends controller_base
 		system::setParam ("page", "posts");
 		//$this->smarty->setCacheID ("MAINPAGE");
 		blog::buildList ("content");
-	}
+    }
 
 	function editPost()
 	{

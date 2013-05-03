@@ -24,7 +24,7 @@
 
 class pagination
 {
-	public $perPage = 10;
+	public $perPage = 10, $range = 10;
 	private $page = 1, $pagesCount = 0, $allCount = 0;
 	public $mysqlData = array(), $htmlRender = array();
 	
@@ -38,38 +38,41 @@ class pagination
 		$this->page = intval ($page);
 		$this->perPage = $perPage;
 		
-		if ($this->page < 1) 
-			$this->page = 1;
-		
 		$this->pagesCount = ceil ($this->allCount / $this->perPage);
-		
-		if (($this->page < 1 ) || ($this->page > $this->pagesCount))
-			$this->page = 1;
+
+		if ($this->page > $this->allCount) 
+		{
+		   $this->page = $this->allCount;
+		}
+
+		if ($this->page < 1) 
+		{
+		   $this->page = 1;
+		}
 	}
 	
 	function calculateOffset()
 	{
-		$this->mysqlData["start"] = ($this->perPage * ($this->page-1));
-		$this->mysqlData["end"] = $this->mysqlData["start"] + $this->perPage;
+		$this->mysqlData["start"] = (($this->page-1) * $this->perPage);
+		$this->mysqlData["end"] = $this->perPage;
 		
-		//if ($this->mysqlData["end"] <= $this->perPage)
-		//	$this->mysqlData["end"] = $this->allCount;
-				
 		return $this->mysqlData;
 	}
 	
 	function genPages()
 	{
-		$pn = 0;
-		
-		for ($x=0; $this->pagesCount > $x; $x++)
+		for ($x = ($this->page - $this->range); 
+			 $x < (($this->page + $this->range) + 1);
+			 ++$x) 
 		{
-			$pn = $x+1;
-			if ($this->page == $pn)
+			if (($x > 0) && ($x <= $this->pagesCount)) 
 			{
-				$this->htmlRender[] = array ("value"=>$pn, "options"=>"current");
-			} else {
-				$this->htmlRender[] = array ("value"=>$pn, "options"=>false);
+				if ($x == $this->page) 
+				{
+					$this->htmlRender[] = array ("value"=>$x, "options"=>"current");
+				} else {
+					$this->htmlRender[] = array ("value"=>$x, "options"=>false);
+				} 
 			}
 		}
 		

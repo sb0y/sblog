@@ -294,12 +294,12 @@ var sortInit =
 	{
 		var tables = document.getElementsByTagName ("table");
 		var tmp;
-
+		
 		for (var i=0; tmp=tables[i]; ++i)
 		{
-			if (tmp.className != "sortable")
+			if ( !tmp.className.match (/sortable/) )
 				continue;
-
+				
 			this.initedTables.push (new sorting (tmp));
 		}
 	}

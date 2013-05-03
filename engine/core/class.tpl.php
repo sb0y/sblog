@@ -75,20 +75,32 @@ class tpl extends Smarty
    { 
   		if (file_exists (TPL_PATH."/$page"))
   		{
-    			if ($page)
-    				$this->pageName = $page;
+			if ($page)
+				$this->pageName = $page;
 
-    			if ($this->runBeforeDisplay)
-    			{
-    				foreach ($this->runBeforeDisplay as $k=>$v)
-    				{
-    					call_user_func_array ($v[0].$v[1].$v[2], empty ($v[3])?array():$v[3]);
-    				}
-    			}
+			if ($this->runBeforeDisplay)
+			{
+				foreach ($this->runBeforeDisplay as $k=>$v)
+				{
+					call_user_func_array ($v[0].$v[1].$v[2], empty ($v[3])?array():$v[3]);
+				}
+			}
 
-    			if (is_null ($this->cacheIdShow))
-            parent::display ($this->pageName);
-    			else parent::display ($this->pageName, $this->cacheIdShow);
+			try {
+				if (is_null ($this->cacheIdShow))
+					parent::display ($this->pageName);
+				else parent::display ($this->pageName, $this->cacheIdShow);
+				
+			} catch (SmartyCompilerException $e) { 
+			   // handle compiler errors 
+			   echo "Error: " . preg_replace('!expected one of:.*!','',$e->getMessage()); 
+			} catch (SmartyException $e) { 
+			   // general Smarty errors 
+			   echo "Error: " . $e->getMessage(); 
+			} catch (Exception $e) { 
+			   // general application errors 
+			   echo "Error: " . $e->getMessage(); 
+			}
   		}
 	}
 }

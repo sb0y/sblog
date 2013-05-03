@@ -23,6 +23,11 @@ class controller_user extends controller_base
 {
 	function index()
 	{	
+		system::redirect ('/');
+	}
+
+	function start()
+	{
 		
 	}
 	
@@ -149,9 +154,9 @@ class controller_user extends controller_base
 			
 		system::setParam ("page", "passwordRestore");
 
-		if (isset ($this->args[1]) && isset ($this->args[2]))
+		if (isset ($this->get["code"]))
 		{
-			$code = preg_replace ("/[^a-z0-9 ]/i", '', $this->args[2]);
+			$code = preg_replace ("/[^a-z0-9 ]/i", '', $this->get["code"]);
 			user::processRequestCode ($code);
 		} else {
 			user::processPasswordRequest();

@@ -149,8 +149,11 @@ class router extends core {
 				}
 
 				$controllerObject->requestModels ($modelsNeeded);
+				$controllerObject->start();
 				$modelsNeeded[] = "index";
 				$this->loadModels ($modelsNeeded, $controllerName);
+				
+				$this->args[] = $controllerName;
 
 				$controllerObject->$controllerAction();
 

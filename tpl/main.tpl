@@ -42,6 +42,18 @@
 		var urlBase = "{$urlBase}";
     </script>
     {block name=pageScripts nocache}{/block}
+    {literal}
+    <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-3086718-3', '.bagrintsev.me');
+        ga('create', 'UA-3086718-3', '.bagrincev.ru');
+        ga('send', 'pageview');
+    </script>
+    {/literal}
 </head>
 <body>
     <div id="wrapper" class="wrapper">
@@ -77,6 +89,7 @@
                             </li>
                             <li{if isset ($args[0]) && $args[0]=="portfolio"} class="active" {/if}><a href="{$urlBase}portfolio">Портфолио</a></li>
                             <li{if isset ($args[0]) && $args[0]=="contacts"} class="active" {/if}><a href="{$urlBase}contacts">Контакты</a></li>
+							<li{if isset ($args[0]) && $args[0]=="server_status"} class="active" {/if}><a href="{$urlBase}server_status">Сервер</a></li>
                         </ul>
                     </div>
                 </div>

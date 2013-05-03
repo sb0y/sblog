@@ -55,6 +55,11 @@ class controller_blog extends controller_base
 
 		//$this->smarty->clearCache ("post.tpl");
 	}
+
+	function start()
+	{
+		
+	}
 	
 	function category()
 	{

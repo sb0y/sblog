@@ -26,6 +26,11 @@ class controller_ajax extends controller_base
 
 	}
 
+	function start()
+	{
+		
+	}
+
 	function getTpl()
 	{
 		system::$display = false;

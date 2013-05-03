@@ -12,7 +12,7 @@
 
     <p>Со мной можно связаться, используя данные средства.</p>
 
-    <table class="sortable">
+    <table class="sortable infoTable">
         <thead>
             <tr>
                 <th>&nbsp;</th>
@@ -70,7 +70,7 @@
 
     <p>Также, меня можно найти в этих соц. сетях</p>
 
-    <table class="sortable">
+    <table class="sortable infoTable">
         <thead>
             <tr>
                 <th>&nbsp;</th>

@@ -26,6 +26,11 @@ class controller_portfolio extends controller_base
 		$this->items();
 	}
 
+	function start()
+	{
+		
+	}
+
 	function requestModels (&$modelsNeeded)
 	{
 		$modelsNeeded = array("blog");

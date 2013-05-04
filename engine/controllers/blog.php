@@ -25,7 +25,7 @@ class controller_blog extends controller_base
 	{
 		system::setParam ("page", "post");
 
-		if (!empty ($this->args[0]))
+		if ($this->args[0] != "blog")
 		{
 			$cacheID = $this->args[0]."|POST";
 			$this->smarty->setCacheID ($cacheID);
@@ -52,8 +52,6 @@ class controller_blog extends controller_base
 				}
 			}
 		} else system::redirect ("/");
-
-		//$this->smarty->clearCache ("post.tpl");
 	}
 
 	function start()

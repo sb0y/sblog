@@ -26,6 +26,11 @@ class controller_users extends controller_base
 		system::setParam ("page", "users");
 		blog::buildList ("users");
 	}
+	
+	function start()
+	{
+		
+	}
 
 	function edit()
 	{

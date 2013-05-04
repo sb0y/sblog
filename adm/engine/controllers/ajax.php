@@ -40,4 +40,9 @@ class controller_ajax extends controller_base
 	{
 		$modelsNeeded = array();
 	}
+	
+	function start()
+	{
+		
+	}
 }

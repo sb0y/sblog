@@ -106,25 +106,28 @@ class router extends core {
 			
 			$controller = array_shift ($parts);
 
-			if (empty($controller)) { $controller = "index"; }
+			if (empty($controller)) $controller = "index";
 
 			$action = array_shift ($parts);
 			
-			if (empty($action)) { $action = "index"; }
+			if (empty($action)) $action = "index";
 			
 			$file = $this->path."/$controller.php";
 
+			$this->args[] = $controller;
+
 			if (!is_readable ($file))
 			{
+				
 				if (!is_readable (TPL_PATH."/static/$controller.tpl"))
 				{
 					throw new Exception ("404 Not Found (file $file is NOT readable)", 404);
 				} else {
-					$this->args[] = $controller;
 					$this->smarty->setCacheID ("STATIC|".$controller);
 					$controller = "index";
 					$file = $this->path."/index.php";
 				}
+				
 			}
 
 			$args = $parts;
@@ -152,8 +155,6 @@ class router extends core {
 				$controllerObject->start();
 				$modelsNeeded[] = "index";
 				$this->loadModels ($modelsNeeded, $controllerName);
-				
-				$this->args[] = $controllerName;
 
 				$controllerObject->$controllerAction();
 

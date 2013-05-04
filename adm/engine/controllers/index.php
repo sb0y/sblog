@@ -31,5 +31,9 @@ class controller_index extends controller_base
 	{
 		$modelsNeeded = array("blog");
 	}
-
+	
+	function start()
+	{
+		
+	}
 }

@@ -25,6 +25,11 @@ class controller_blog extends controller_base
 	{
 		$this->posts();
 	}
+	
+	function start()
+	{
+		
+	}
 
 	function writePost()
 	{

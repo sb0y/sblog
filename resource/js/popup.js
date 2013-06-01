@@ -17,38 +17,50 @@ function Popup()
 		
 	}
 	
-	this.hideWindow = function (tplName)
+	this.closeWindow = function (tplName)
 	{
 		$(windows[tplName]).remove();
 		delete windows[tplName];
 		windows[tplName] = null;
 		body.attr ("class", "");
-		this.twilight();
+		//this.twilight();
 	}
 	
 	this.showWindow = function (tplName)
 	{
-		var t = this;
+		var self = this;
 		
 		var div = document.createElement ("div");
 		div.className = "popup-layer";
 		var imgClose = document.createElement ("img");
 		imgClose.src = urlBase+"resource/images/close.png";
 		imgClose.className = "close-btn";
-		imgClose.onclick = function() {t.hideWindow (tplName)};
-		var span = document.createElement ("span");
-		div.appendChild (imgClose);
-		div.appendChild (span);
-		body.append (div);
+		imgClose.onclick = function() { self.closeWindow (tplName); };
+		body.prepend (div);
 		windows[tplName] = div;
-		this.twilight();
-		twilightObj.onclick = function () {t.hideWindow (tplName)};
-		body.attr ("class", "body-lock");
+
+		div.onclick = function (e) 
+		{
+			if (!e) e = window.event;
+			var target = e.target || e.srcElement
+
+			if (target == this)
+			{
+				self.closeWindow (tplName);
+			}
+		};
 		
+		//this.twilight();
+		//twilightObj.onclick = function () {t.hideWindow (tplName)};
 		
 		$.get ("http://"+document.domain+"/ajax/getTpl/"+tplName+"?fromUrl="+encodeURI(window.location), function(data)
 		{
-			span.innerHTML = data;
+			div.innerHTML = "<!--[if lt IE 9]><div class=\"popup-layer popup_overlay_ie\"></div><![endif]--><div class=\"popup\">"+
+				data+"</div><!--[if lt IE 9]><div class=\"popup_valignfix\"></div><![endif]-->";
+		
+			body.attr ("class", "body-lock");
+
+			div.childNodes[1].insertBefore (imgClose, div.childNodes[1].firstChild);
 		});
 	}
 }

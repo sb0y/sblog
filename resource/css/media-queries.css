@@ -8,7 +8,7 @@ screen and (max-device-width: 480px) {
 }
 
 /*
-	Blog style for: Interim and OMFGHUGE
+    Blog style for: Interim and OMFGHUGE
 */
 
 @media screen and (max-width: 768px) {
@@ -16,7 +16,7 @@ screen and (max-device-width: 480px) {
 }
 
 /*
-	Nav wrap fix
+    Nav wrap fix
 */
 @media screen and (max-width: 520px) {
     body {
@@ -30,7 +30,7 @@ screen and (max-device-width: 480px) {
 }
 
 /*
-	Tiny
+    Tiny
 */
 @media screen and (max-width: 480px) {
 
@@ -38,7 +38,7 @@ screen and (max-device-width: 480px) {
 }
 
 /*
-	Tinier
+    Tinier
 */
 @media screen and (max-device-width: 360px)  {
     body {
@@ -92,7 +92,7 @@ screen and (max-device-width: 480px) {
 }
 
 /*
-	OMFGHUGE
+    OMFGHUGE
 */
 @media screen and (min-width: 1025px) {
     body {

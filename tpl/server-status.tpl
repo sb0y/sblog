@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="{$urlBase}resource/css/tables.css" type="text/css" media="all" />
 {/block}
 {block name=body}
-<div class="posts-list post">
+<div class="posts-list post server-status">
 	<p><h1>Статистика сервера</h1></p>
 	<p>Сайт bagrintsev.me располагается на собственном физическом сервере.<br />
 	В качестве серверной <abbr title="Операционная Система">ОС</abbr> используется <abbr title="Linux From Scratch, Линукс с нуля, конструктор">LFS</abbr> <a target="_blank" href="http://www.gentoo.org">Gentoo Linux</a>, собираемая из stage 3.</p>
@@ -99,6 +99,33 @@
 		</tbody>
 	</table>
 	
+	<p><h3>Графики загруженности системы на текущие 24 часа</h3></p>
+	
+	<div class="plotBox row">
+		<div class="column_6">
+			<a href="http://munin.bagrintsev.me/fabian/fabian/entropy.html" target="_blank">
+				<img src="http://munin.bagrintsev.me/fabian/fabian/memory-day.png" alt="Memory usage" title="Memory usage" />
+			</a>			
+		</div>
+		<div class="column_6 float-right">
+			<a href="http://munin.bagrintsev.me/fabian/fabian/cpu.html" target="_blank">
+				<img src="http://munin.bagrintsev.me/fabian/fabian/cpu-day.png" alt="CPU usage" title="CPU usage" />
+			</a>
+		</div>
+		<div class="clear"></div>
+		<div class="column_6">
+			<a href="http://munin.bagrintsev.me/fabian/fabian/entropy.html" target="_blank">
+				<img src="http://munin.bagrintsev.me/fabian/fabian/entropy-day.png" alt="Available entropy" title="Available entropy" />
+			</a>
+		</div>
+		<div class="column_6 float-right">
+			<a href="http://munin.bagrintsev.me/fabian/fabian/load.html" target="_blank">
+				<img src="http://munin.bagrintsev.me/fabian/fabian/load-day.png" alt="Load average" title="Load average" />
+			</a>
+		</div>
+		<div class="clear"></div>
+	</div>
+
 	<p><h3>Версии установленного ПО</h3></p>
 	
 	<table class="infoTable sortable">

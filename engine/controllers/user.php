@@ -54,7 +54,9 @@ class controller_user extends controller_base
 		system::setParam ("page", "loginPage");
 		$authRes = false;
 
-		if (isset ($this->args[1]) && $this->args[2])
+		//print_r($this->get);
+
+		if (isset ($this->args[1]) && isset ( $this->args[2] ) )
 		{
 			$up = user::socialLogin ($this->args[2]);
 						
@@ -72,10 +74,10 @@ class controller_user extends controller_base
 			if (!system::checkErrors())
 			{
 				$authRes = user::userLogin();
-				
-				if (!$authRes)
-					return system::redirect ("/user/passwordRestore");
 			}
+			
+			if (!$authRes)
+				return system::redirect ("/user/passwordRestore");
 		}
 		
 		if ($authRes)
@@ -99,6 +101,9 @@ class controller_user extends controller_base
 		if (!isset ($_SESSION["user"]))
 			system::redirect ('/');
 		
+		$cacheID = "USERPANEL|user_".$_SESSION["user"]["userID"];
+		$this->smarty->setCacheID ($cacheID);
+		
 		system::setParam ("page", "userProfile");
 		
 		if (!empty ($_POST))
@@ -107,19 +112,19 @@ class controller_user extends controller_base
 			
 			if (!system::checkErrors())
 			{
-				$_POST = array_map ("trim", $_POST);
+				$post = array_map ("trim", $_POST);
 				
-				$filtredPost["nick"] = htmlspecialchars ($_POST["nick"]);
-				$filtredPost["email"] = htmlspecialchars ($_POST["email"]);
-				
-				if (!empty ($_POST["password1"]) && !empty ($_POST["password2"]) && $_SESSION["user"]["source"]=="direct")
+				$filtredPost["nick"] = htmlspecialchars ($post["nick"]);
+				$filtredPost["email"] = htmlspecialchars ($post["email"]);
+
+				if (!empty ($post["password1"]) && !empty ($post["password2"]) && $_SESSION["user"]["source"]=="direct")
 				{
 					unset ($filtredPost["password1"]);
 					unset ($filtredPost["password2"]);
 					
-					if ($_POST["password2"] == $_POST["password1"])
+					if ($post["password2"] == $post["password1"])
 					{
-						$filtredPost["password"] = md5(md5($_POST["password1"]));
+						$filtredPost["password"] = md5(md5($post["password1"]));
 					} else {
 						system::registerEvent ("error", "password2", "Пароли не совпадают.", "Проверочный пароль");
 						system::registerEvent ("error", "password1", "Пароли не совпадают.", "Проверочный пароль");
@@ -138,13 +143,37 @@ class controller_user extends controller_base
 				foreach ($filtredPost as $k=>$v)
 					if (!$v)
 						unset ($filtredPost[$k]);
-						
+				
 				$this->db->updateTable ("users", $filtredPost, "userID", $_SESSION["user"]["userID"]);
+				$this->smarty->clearCurrentCache();
+				$this->smarty->clearBrowserCache();
 			}
 		}
+
+		if (isset($_GET["delUserAvatar"]) && $_GET["delUserAvatar"] == "true")
+		{
+			$this->smarty->clearCurrentCache();
+			$this->smarty->clearBrowserCache();
+		}
 		
-		$user = $this->db->query ("SELECT * FROM `users` WHERE `userID`=?", $_SESSION["user"]["userID"])->fetch();
-		$this->smarty->assign ("fill", $user);
+		if (!$this->smarty->isCached ("userProfile.tpl", $cacheID))
+		{
+			$user = $this->db->query ("SELECT * FROM `users` WHERE `userID`=?", $_SESSION["user"]["userID"])->fetch();
+			$this->smarty->assign ("fill", $user);
+		}
+
+		if (isset($_GET["delUserAvatar"]) && $_GET["delUserAvatar"] == "true")
+		{
+			if ($user["avatar"]!="NULL")
+				unlink (CONTENT_PATH."/avatars/".$user["avatar"]);
+			if ($user["avatar_small"]!="NULL")
+				unlink (CONTENT_PATH."/avatars/".$user["avatar_small"]);
+
+			$this->db->updateTable ("users", array ("avatar"=>"NULL","avatar_small"=>"NULL"), 
+				"userID", intval ($_SESSION["user"]["userID"]) );
+
+			system::redirect ("/user/controlpanel");
+		}
 	}
 	
 	function passwordRestore()

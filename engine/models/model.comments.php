@@ -117,6 +117,9 @@ class comments extends model_base
 		foreach ($sqlData as $key => $value) 
 		{
 			$sqlData[$key]["body"] = nl2br($value["body"]);
+
+			if ($value["avatar_small"] == "NULL")
+				unset ( $sqlData[$key]["avatar_small"] );
 		}
 
 		return $sqlData;

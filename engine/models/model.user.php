@@ -123,12 +123,10 @@ class user extends model_base
 	public static function socialRegister ($method, $data)
 	{
 		$res = self::$db->query ("SELECT * FROM `users` WHERE `socID`=? AND `source`='?'", $data->identifier, $method);
+		$nick = trim ($data->firstName.' '.$data->lastName);
 		
 		if ($res->num_rows <= 0)
-		{		
-			//echo $data->identifier;
-			$nick = trim ($data->firstName.' '.$data->lastName);
-			
+		{					
 			if ($data->emailVerified)
 				$email = $data->emailVerified;
 			else if ($data->email)
@@ -154,14 +152,20 @@ class user extends model_base
 		} else {
 			$user = $res->fetch();
 			$sic = array();
-			
-			foreach ($data as $k=>$v)
+			$dataArray = (array)$data;
+			$dataArray["nick"] = $nick;
+			$dataArray["remote_pic"] = $dataArray["photoURL"];
+
+			foreach ($dataArray as $k=>$v)
 			{
 				if ($k == "email")
 					continue;
 				
 				if (isset ($user[$k]) && $user[$k] != $v)
 					$sic[$k] = $v;
+
+				//if (isset ($user[$k]))
+				//	echo $user[$k] ." = ". $v."\n";
 			}
 			
 			if (isset ($sic["remote_pic"]))
@@ -171,8 +175,13 @@ class user extends model_base
 				$sic["avatar_small"] = $avatar["small"];
 			}
 			
-			self::$db->updateTable ("users", $sic, "userID", $user["userID"]);
-			
+			if ( !empty ($sic) )
+			{
+				self::$db->updateTable ("users", $sic, "userID", $user["userID"]);
+				self::$smarty->clearCache ("userProfile.tpl");
+				self::$smarty->clearBrowserCache();
+			}
+
 			return $user["userID"];
 		}
 	}

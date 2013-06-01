@@ -34,10 +34,11 @@ class controller_ajax extends controller_base
 	function getTpl()
 	{
 		system::$display = false;
-		$tplName = array_pop ($this->args);
+		$tplName = $this->get["getTpl"];
+
 		$file = TPL_PATH."/ajax/$tplName.tpl";
-		$tplContent = "File not founded";
-		
+		$tplContent = "File not found";
+
 		if (isset ($_GET["fromUrl"]) && $_GET["fromUrl"])
 		{
 			$this->smarty->assign ("routePath", urldecode ($_GET["fromUrl"]));

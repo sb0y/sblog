@@ -18,8 +18,8 @@
 target (100%) / value (column number = 1) = 8,333333333333333
 */
 .column_1 {width: 8.333333333333333%;}	
-.column_2 {width: 16.66666666666667%}
-.column_3 { width: 25%;}
+.column_2 {width: 16.66666666666667%;}
+.column_3 {width: 25%;}
 .column_4 {width: 33.33333333333333%;}
 .column_5 {width: 41.66666666666667%;}
 .column_6 {width: 50%;}

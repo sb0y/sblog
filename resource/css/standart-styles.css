@@ -1,3 +1,9 @@
-p { margin:0 0 1em 0; padding:0; line-height:200%; }
+p { margin:0 0 1em 0; padding:0; line-height:130%; }
 strong {font-weight:bold;}
-br {display:block;margin: 0;padding:0;line-height:22px;content: " ";}
+br {display:block; 
+height:5px; 
+font-size:0;
+line-height:0;
+content: " ";
+padding:0;
+margin:0;}

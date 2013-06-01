@@ -1,14 +1,16 @@
 <?php
-class db extends MySQLi
+
+class db
 {
 	public $runAfterFetchAll = array(), $runAfterFetch = array();
 	public $database = "", $connect_host = "", $user = "", $password = "", $codepage = "utf8";
-	private $inited = false, $log = array(), $initTime = 0, $lastQueryTime = 0;
+	private $inited = false, $log = array(), $initTime = 0, $lastQueryTime = 0, $dbObj = null;
+
 	const ERROR = 0;
 	const SUCCESS = 1;
 	const INFO = 2;
 
-	function __construct ($configArray)
+	public function __construct ($configArray)
 	{
 		$this->conf ($configArray);
 		
@@ -16,10 +18,10 @@ class db extends MySQLi
 			throw new exception("mysqliIsNotFound", "PHP can't load MySQLi extension");
 	}
 
-	function __destruct()
+	public function __destruct()
 	{
 		if ($this->inited)
-			$this->close();
+			$this->dbObj->close();
 	}
 	
 	private function get_mt()
@@ -28,7 +30,7 @@ class db extends MySQLi
 		return ((float)$usec + (float)$sec);
 	}
 	
-	function conf ($configArray)
+	public function conf ($configArray)
 	{
 		if ($configArray)
    		{
@@ -44,17 +46,17 @@ class db extends MySQLi
 	   	//mysqli_report (MYSQLI_REPORT_ALL);
 	}
 
-	function hex2string ($str)
+	private function hex2string ($str)
 	{
 		return str_replace ("%3F", "?", $str);
 	}
 
-	function string2hex ($str)
+	private function string2hex ($str)
 	{
 		return str_replace ("?", "%3F", $str);
 	}
 
-	function init ($configArray=null)
+	public function init ($configArray=null)
 	{
 		if ($this->inited)
 			return;
@@ -62,13 +64,13 @@ class db extends MySQLi
 		if ($configArray)
 			$this->conf ($configArray);
 
-		parent::__construct ($this->connect_host, $this->user, $this->password, $this->database);
-		parent::set_charset ($this->codepage);
+		$this->dbObj = new MySQLi ($this->connect_host, $this->user, $this->password, $this->database);
+		$this->dbObj->set_charset ($this->codepage);
 		
 		if (mysqli_connect_errno())
 		{
 			printf("Can't connect to MySQL server. Error Message: %s\n", mysqli_connect_error());
-			throw new exception(mysqli_error($this), mysqli_errno($this));
+			throw new exception(mysqli_error($this->dbObj), mysqli_errno($this->dbObj));
 		}
 
 		$this->initTime = $this->get_mt();
@@ -81,7 +83,7 @@ class db extends MySQLi
 	{		
 		$data["type"] = $queryType;
 		$data["time"] = $this->get_mt();
-		$data["rowsNum"] = $this->field_count;
+		$data["rowsNum"] = $this->dbObj->field_count;
 		$data["realQueryTime"] = $this->lastQueryTime;
 		
 		if (isset ($this->error))
@@ -97,7 +99,7 @@ class db extends MySQLi
 		foreach ($args as $k=>$v)
 		{	
 			$v = $this->string2hex ($v);
-			$this->escape_string ($v);
+			$this->escapeString ($v);
 			$tmp[$k] .= $this->string2hex ($v);	
 		}
 				
@@ -126,38 +128,39 @@ class db extends MySQLi
 
 		try 
 		{
-			$this->real_query ($query);
+			$this->dbObj->real_query ($query);
 
-			if (mysqli_error ($this))
+			if (mysqli_error ($this->dbObj))
 			{
-				throw new exception (mysqli_error($this), mysqli_errno($this));
+				throw new exception (mysqli_error($this->dbObj), mysqli_errno($this->dbObj));
 			}
 
 			$endtime = microtime (true);
 			$this->lastQueryTime = $endtime - $starttime;
 
 			$this->log (db::SUCCESS, array("query"=>$query));
-			$res = new db_result ($this);
+			$res = new db_result ($this->dbObj);
 			$res->runAfterFetchAll = $this->runAfterFetchAll;
 			$res->runAfterFetch = $this->runAfterFetch;
+			return $res;
 		} catch (Exception $e) {
 			echo "<b>" . $e->getMessage() . "</b><br />\r\n";
 			var_dump ($e->getTrace());
 			$this->log (db::ERROR, array("query"=>$query, "message"=>$e->getTrace()));
 		}
-		
-		return $res;
+
+		return true;
 	}
 
 	public function insert_id()
 	{
-		return mysqli_insert_id ($this);
+		return mysqli_insert_id ($this->dbObj);
 	}
 	
-	public function escape_string (&$string)
+	public function escapeString (&$string)
 	{
 		$this->init();
-		$string = $this->real_escape_string ($string);
+		$string = $this->dbObj->real_escape_string ($string);
 		return $string;
 	}
 	
@@ -169,7 +172,7 @@ class db extends MySQLi
 		{
 			foreach ($data as $k=>$v)
 			{
-				$tmp[] = "`$k`='".$this->escape_string ($v)."'";
+				$tmp[] = "`$k`='".$this->escapeString ($v)."'";
 			}
 			
 			if (!empty ($tmp))

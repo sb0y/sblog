@@ -4,7 +4,7 @@ abstract class model_base
 	protected static $smarty, $db, $controllerCall = array(), $args = array(), 
 		$routePath = '', $mail = null, $get = array();
 	
-	abstract static function start();
+	//abstract public function start();
 	
 	public static function init ($core)
 	{

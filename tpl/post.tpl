@@ -35,7 +35,7 @@
                         </div>
                         <div class="post-data">
                            <div class="padding-20 margin-left-50">
-                                 {$v.dt|date_format:"%d"} {$v.dt|date_format:"%B"|month_declination} в {$v.dt|date_format:"%H:%M"} <a href="{$urlBase}blog/{$post.slug|urlencode}/#comment_{$v.commentID}" title="Ссылка на комментарий">#</a>
+                                 {$v.dt|date_format:"%d"} {$v.dt|month_declination} в {$v.dt|date_format:"%H:%M"} <a href="{$urlBase}blog/{$post.slug|urlencode}/#comment_{$v.commentID}" title="Ссылка на комментарий">#</a>
                             </div>
                             <div class="padding-10 post-data"><!-- start post-data -->
                                 {$v.body}

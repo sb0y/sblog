@@ -25,11 +25,11 @@
     <link rel='stylesheet' id='droid-font-css'  href='http://fonts.googleapis.com/css?family=Droid+Serif%3A400%2C400italic%2C700&#038;ver=1' type='text/css' media='all' />
     <link rel='stylesheet' id='reset' href='{$urlBase}resource/css/reset.css' type='text/css' media='all' />
     <link rel='stylesheet' id='base-grid' href='{$urlBase}resource/css/grid.css' type='text/css' media='all' />
-    <link rel="stylesheet" id="base-style" href="{$urlBase}resource/css/style.css" type="text/css" media="all" />
+    <link rel="stylesheet" id="base-style" href="{$urlBase}resource/css/style.css?v=1" type="text/css" media="all" />
     <link rel='stylesheet' id='media-queries' href='{$urlBase}resource/css/media-queries.css' type='text/css' media='all' />
-    <link rel="stylesheet"  href="{$urlBase}resource/css/auth-form.css" type="text/css" media="all" />
-    <link rel="stylesheet"  href="{$urlBase}resource/css/standart-styles.css" type="text/css" media="all" />
-	<link rel="stylesheet"  href="{$urlBase}resource/css/geshi.css" type="text/css" media="all" />
+    <link rel="stylesheet" href="{$urlBase}resource/css/auth-form.css" type="text/css" media="all" />
+    <link rel="stylesheet" href="{$urlBase}resource/css/standart-styles.css" type="text/css" media="all" />
+	<link rel="stylesheet" href="{$urlBase}resource/css/geshi.css" type="text/css" media="all" />
     
     <!--[if lte IE 8]><script src="{$urlBase}oldies/oldies.js" charset="utf-8"></script><![endif]-->
     <script type="text/javascript" src="{$urlBase}resource/js/css_browser_selector.js"></script>
@@ -77,9 +77,9 @@
                         <a href="{$urlBase}"><img alt="logo" src="{$urlBase}resource/images/logo.png" /></a>
                     </div>
                 </div>
-                <div class="header">
+                <div class="column_7 header">
                     <div class="header-menu">
-                        <ul class="float-right">
+                        <ul class="float-right ">
                             <li{if !isset ($args[0])} class="active"{/if} id="homepage"><a href="{$urlBase}">Главная</a></li>
                             <li{if isset ($args[0]) && $args[0]=="about"} class="active" {/if}><a href="{$urlBase}about">Обо мне</a></li>
                             <li class="has-dropdown"><a href="{$urlBase}blog">Блог</a>
@@ -95,16 +95,16 @@
                 </div>
         </div>
         <div class="row">
-            <div class="search-block float-right">
+            <div class="search-block float-right column_2 header">
                 <form method="get" action="{$urlBase}blog/search">
-                    <input name="text" type="text" id="search"{if isset ($searchWord) nocache} value="{$searchWord}" {/if}/><button type="submit">Найти</button>
+                    <input class="column_9" name="text" type="text" id="search"{if isset ($searchWord) nocache} value="{$searchWord}" {/if}/><button type="submit">Найти</button>
                  </form>
             </div>
         </div>
         </header>
         <div class="clear"></div>
         {block name=body}
-        <div class="posts-list">
+        <div class="posts-list post">
         {foreach $posts as $key=>$item}
 		{include file="includes/post4cycle.tpl"}
         {foreachelse}

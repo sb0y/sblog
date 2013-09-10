@@ -4,7 +4,8 @@ class db
 {
 	public $runAfterFetchAll = array(), $runAfterFetch = array();
 	public $database = "", $connect_host = "", $user = "", $password = "", $codepage = "utf8";
-	private $inited = false, $log = array(), $initTime = 0, $lastQueryTime = 0, $dbObj = null, $uniqueQueryKey = "";
+	private $inited = false, $log = array(), $initTime = 0, $lastQueryTime = 0, $dbObj = null, $uniqueQueryKey = "",
+	$startTime = 0;
 
 	const ERROR = 0;
 	const SUCCESS = 1;
@@ -48,7 +49,9 @@ class db
 
 	private function generateRandomString ($length = 10) 
 	{
-    	return substr ( str_shuffle ("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length );
+        list ($usec, $sec) = explode(' ', microtime() );
+        srand ( (float) $sec + ((float) $usec * 100000) );
+    	return substr ( str_shuffle ("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), ( rand() % time() ), $length );
 	}
 
 	private function hex2string ($str)
@@ -113,9 +116,8 @@ class db
 
 	public function query (/*...*/)
 	{
+		$this->startTime = microtime (true);
 		$this->uniqueQueryKey = "{QUERYKEY_".$this->generateRandomString()."}";
-
-		$starttime = microtime (true);
 		
 		// init system if needed
 		$this->init();
@@ -143,7 +145,7 @@ class db
 			}
 
 			$endtime = microtime (true);
-			$this->lastQueryTime = $endtime - $starttime;
+			$this->lastQueryTime = $endtime - $this->startTime;
 
 			$this->log (db::SUCCESS, array("query"=>$query));
 			$res = new db_result ($this->dbObj);

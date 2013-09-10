@@ -76,7 +76,7 @@ class portfolio extends model_base
 
         foreach ($post as $k=>$v)
         {
-			$v = self::$db->escape_string ($v);
+			$v = self::$db->escapeString ($v);
 
 			switch ($k) 	
 			{

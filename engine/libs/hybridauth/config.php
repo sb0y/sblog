@@ -21,7 +21,7 @@ return
 			
 			"Vkontakte" => array (
 				"enabled" => true,
-				"keys"	  => array ( "id" => "000000", "secret" => "secret" ),
+				"keys"	  => array ( "id" => "3066598", "secret" => "7jAK2cque82ie9Un0nWg" ),
 
 			),
 
@@ -36,7 +36,7 @@ return
 
 			"Google" => array ( 
 				"enabled" => true,
-				 "keys"    => array ( "id" => "000000.apps.googleusercontent.com", "secret" => "secret" ), 
+				 "keys"    => array ( "id" => "738099631440.apps.googleusercontent.com", "secret" => "7-O9HSrU5XtMS0yQCYg9Yp4y" ), 
 		         "scope"           => "https://www.googleapis.com/auth/userinfo.profile " .
 		                               "https://www.googleapis.com/auth/userinfo.email", // optional
 		         "access_type"     => "offline", // optional
@@ -45,13 +45,13 @@ return
 
 			"Facebook" => array ( 
 				"enabled" => true,
-				"keys"    => array ( "id" => "00000", "secret" => "secret" ),
+				"keys"    => array ( "id" => "338129942948740", "secret" => "09e18fd769616a426c32ad8c2d6308fd" ),
                 "scope"   => "email, user_about_me"
 			),
 
 			"Twitter" => array ( 
 				"enabled" => true,
-				"keys"    => array ( "key" => "secret", "secret" => "secret" ) 
+				"keys"    => array ( "key" => "0wwPrA9I6UOXzF5xGKOq1A", "secret" => "Z9lOtqyYyeR3oKpPzfVXCtFYeKJXSOUdqJpno68tnQ" ) 
 			),
 
 			// windows live

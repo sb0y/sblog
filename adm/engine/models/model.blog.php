@@ -73,7 +73,7 @@ class blog extends model_base
 
         foreach ($post as $k=>$v)
         {
-			$v = self::$db->escape_string ($v);
+			$v = self::$db->escapeString ($v);
 
 			switch ($k) 	
 			{
@@ -99,7 +99,7 @@ class blog extends model_base
 
 		if (count ($short) > 1)
 		{
-			$content["short"] = "`short`='".self::$db->escape_string (nl2br ($short[0]))."'";
+			$content["short"] = "`short`='".self::$db->escapeString (nl2br ($short[0]))."'";
 		}
 
 		//print_r ($_POST);

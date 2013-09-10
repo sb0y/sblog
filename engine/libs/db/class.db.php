@@ -4,7 +4,7 @@ class db
 {
 	public $runAfterFetchAll = array(), $runAfterFetch = array();
 	public $database = "", $connect_host = "", $user = "", $password = "", $codepage = "utf8";
-	private $inited = false, $log = array(), $initTime = 0, $lastQueryTime = 0, $dbObj = null;
+	private $inited = false, $log = array(), $initTime = 0, $lastQueryTime = 0, $dbObj = null, $uniqueQueryKey = "";
 
 	const ERROR = 0;
 	const SUCCESS = 1;
@@ -46,14 +46,19 @@ class db
 	   	//mysqli_report (MYSQLI_REPORT_ALL);
 	}
 
+	private function generateRandomString ($length = 10) 
+	{
+    	return substr ( str_shuffle ("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length );
+	}
+
 	private function hex2string ($str)
 	{
-		return str_replace ("%3F", "?", $str);
+		return str_replace ($this->uniqueQueryKey, "?", $str);
 	}
 
 	private function string2hex ($str)
 	{
-		return str_replace ("?", "%3F", $str);
+		return str_replace ("?", $this->uniqueQueryKey, $str);
 	}
 
 	public function init ($configArray=null)
@@ -108,6 +113,8 @@ class db
 
 	public function query (/*...*/)
 	{
+		$this->uniqueQueryKey = "{QUERYKEY_".$this->generateRandomString()."}";
+
 		$starttime = microtime (true);
 		
 		// init system if needed

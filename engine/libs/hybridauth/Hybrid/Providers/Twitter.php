@@ -86,7 +86,21 @@ class Hybrid_Providers_Twitter extends Hybrid_Provider_Model_OAuth1
 		$this->user->profile->displayName = (property_exists($response,'screen_name'))?$response->screen_name:"";
 		$this->user->profile->description = (property_exists($response,'description'))?$response->description:"";
 		$this->user->profile->firstName   = (property_exists($response,'name'))?$response->name:""; 
-		$this->user->profile->photoURL    = (property_exists($response,'profile_image_url'))?$response->profile_image_url:"";
+		
+		// WARNING !!!
+		// Check if full sized image is available [Sb0y @ 19.08.2012]
+		if (property_exists($response, "profile_image_url"))
+		{
+			$photoURL = str_replace ("_normal", '', $response->profile_image_url);
+			if (!$ch = curl_init ($photoURL))
+			{
+			$this->user->profile->photoURL = $response->profile_image_url;
+			} else {
+				curl_close ($ch);
+				$this->user->profile->photoURL = $photoURL;
+			}  
+		}
+
 		$this->user->profile->profileURL  = (property_exists($response,'screen_name'))?("http://twitter.com/".$response->screen_name):"";
 		$this->user->profile->webSiteURL  = (property_exists($response,'url'))?$response->url:""; 
 		$this->user->profile->region      = (property_exists($response,'location'))?$response->location:"";

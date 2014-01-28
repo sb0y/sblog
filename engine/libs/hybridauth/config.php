@@ -8,10 +8,9 @@
 // ----------------------------------------------------------------------------------------
 //	HybridAuth Config file: http://hybridauth.sourceforge.net/userguide/Configuration.html
 // ----------------------------------------------------------------------------------------
-
 return 
 	array(
-		"base_url" => "http://bagrintsev.me/engine/libs/hybridauth/", 
+		"base_url" => "http://".system::param("siteDomain")."/engine/libs/hybridauth/", 
 
 		"providers" => array ( 
 			// openid providers
@@ -21,7 +20,7 @@ return
 			
 			"Vkontakte" => array (
 				"enabled" => true,
-				"keys"	  => array ( "id" => "3066598", "secret" => "7jAK2cque82ie9Un0nWg" ),
+				"keys"	  => array ( "id" => "2919631", "secret" => "R1AeSu97PgCDEpf99s7w" ),
 
 			),
 
@@ -36,7 +35,7 @@ return
 
 			"Google" => array ( 
 				"enabled" => true,
-				 "keys"    => array ( "id" => "738099631440.apps.googleusercontent.com", "secret" => "7-O9HSrU5XtMS0yQCYg9Yp4y" ), 
+				 "keys"    => array ( "id" => "559411624737.apps.googleusercontent.com", "secret" => "S5wOpuyB0s7Oo7YBykFMofaQ" ), 
 		         "scope"           => "https://www.googleapis.com/auth/userinfo.profile " .
 		                               "https://www.googleapis.com/auth/userinfo.email", // optional
 		         "access_type"     => "offline", // optional
@@ -45,13 +44,13 @@ return
 
 			"Facebook" => array ( 
 				"enabled" => true,
-				"keys"    => array ( "id" => "338129942948740", "secret" => "09e18fd769616a426c32ad8c2d6308fd" ),
+				"keys"    => array ( "id" => "657186284300589", "secret" => "942f986c27370c9cecd42091e2c3f2e1" ),
                 "scope"   => "email, user_about_me"
 			),
 
 			"Twitter" => array ( 
 				"enabled" => true,
-				"keys"    => array ( "key" => "0wwPrA9I6UOXzF5xGKOq1A", "secret" => "Z9lOtqyYyeR3oKpPzfVXCtFYeKJXSOUdqJpno68tnQ" ) 
+				"keys"    => array ( "key" => "kmgaSRmW6CNwzC9MvOJEww", "secret" => "slocmB7kf4FMhMxpaNCDhKLBw5QYWTbyHd3N0A8" ) 
 			),
 
 			// windows live

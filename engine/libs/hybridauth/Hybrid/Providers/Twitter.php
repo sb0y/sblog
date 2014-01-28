@@ -89,16 +89,16 @@ class Hybrid_Providers_Twitter extends Hybrid_Provider_Model_OAuth1
 		
 		// WARNING !!!
 		// Check if full sized image is available [Sb0y @ 19.08.2012]
-		if (property_exists($response, "profile_image_url"))
+		if ( property_exists ( $response, "profile_image_url" ) )
 		{
 			$photoURL = str_replace ("_normal", '', $response->profile_image_url);
 			if (!$ch = curl_init ($photoURL))
 			{
-			$this->user->profile->photoURL = $response->profile_image_url;
+				$this->user->profile->photoURL = $response->profile_image_url;
 			} else {
 				curl_close ($ch);
 				$this->user->profile->photoURL = $photoURL;
-			}  
+			}	
 		}
 
 		$this->user->profile->profileURL  = (property_exists($response,'screen_name'))?("http://twitter.com/".$response->screen_name):"";

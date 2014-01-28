@@ -2,6 +2,11 @@ var pupld = null;
 
 function picUpload()
 {
+	if ( typeof urlBase == "undefined" )
+	{
+		return alert ( "Переменная urlBase не определена, инициализация скрипта ajaxPicUpload.js не возможна." );
+	}
+
 	var self = this;
 	this.itemName = "";
 
@@ -17,7 +22,7 @@ function picUpload()
 
 	this.iframe = $("#picFrame");
 	this.userForm = $("#form");
-	this.picsDiv = $("#pics");
+	this.picsDiv = $("#picDiv");
 	this.picForm = $("#picForm");
 	this.extAllowed = ["jpeg", "jpg", "bmp", "png", "gif"];
 
@@ -26,7 +31,7 @@ function picUpload()
 		var form = document.createElement ("form");
 		form.method = "post";
 		form.name = "picRealUpload";
-		form.action = "/adm/ajax/picture";
+		form.action = urlBase+"ajax/picture";
 		form.enctype = "multipart/form-data";
 
 		var formMarker = document.createElement ("input");
@@ -111,7 +116,7 @@ function picUpload()
 		self.uploadPicture();
 	}
 
-	this.deletePicture = function (picID, object)
+	this.deletePicture = function ( picID, object )
 	{
 		if (self.itemName === "" || !self.itemName)
 		{
@@ -131,9 +136,9 @@ function picUpload()
 					var jobj = $(object).parent();
 					jobj.remove();
 
-					if (self.picsDiv.children().length == 0)
+					if (self.picsDiv.children().length == 1)
 					{
-						$("#uploadedPics").toggle ("slow");
+						$("#pics").hide ("fast");
 					}
 				}
 			}
@@ -156,18 +161,22 @@ function picUpload()
 		//console.log (array);
 	
 		var div = document.createElement ("div");
+		var wrapDiv = document.createElement ("div");
+		wrapDiv.className = "pic-windows-wrap";
 		div.className = "pic-windows";
 		var a = document.createElement ("a");
 		a.target = "_blank";
 		a.href = "/content/"+picsDir+"/"+self.itemName+"/"+array.small;
+		a.className = "showPicLink";
 		var imgThumb = document.createElement ("img");
+		imgThumb.className = "showPic";
 
 		if (array.small)
 			imgThumb.src = "/content/"+picsDir+"/"+self.itemName+"/"+array.small;
 		else imgThumb.src = "/content/"+picsDir+"/"+self.itemName+"/"+array.big;
 
 		a.appendChild (imgThumb);
-		div.appendChild (a);
+		wrapDiv.appendChild (a);
 
 		var aDelete = document.createElement ("a");
 		var imgDelete = document.createElement ("img");
@@ -175,49 +184,60 @@ function picUpload()
 		aDelete.className = "deletePic";
 		aDelete.href = "javascript:;";
 		aDelete.id = picID;
-		aDelete.onclick = function() {self.deletePicture (picID, this)};
-		imgDelete.src = "/adm/resources/img/icons/erase.png";
+		aDelete.onclick = function() { self.deletePicture (picID, this); };
+		imgDelete.src = urlBase+"resources/img/icons/notifier_close.png";
 		aDelete.appendChild (imgDelete);
-		div.appendChild (aDelete);
-		div.appendChild (document.createElement ("br"));
+		wrapDiv.appendChild (aDelete);
+		wrapDiv.appendChild (document.createElement ("br"));
 
 		if (array.small)
 		{
 			var b = document.createElement ("b");
 			b.innerHTML = "Код для полноразмерной картинки:";
-			div.appendChild (b);
-			div.appendChild (document.createElement("br"));
+			wrapDiv.appendChild (b);
+			wrapDiv.appendChild (document.createElement("br"));
 			var smallInput = document.createElement ("input");
 			smallInput.className = "auto-select";
 			smallInput.size = 70;
 			smallInput.value = "<img src=\"/content/"+picsDir+"/"+self.itemName+"/"+array.big+"\" />";
-			div.appendChild (smallInput);
-			div.appendChild (document.createElement("br"));
+			wrapDiv.appendChild (smallInput);
+			wrapDiv.appendChild (document.createElement("br"));
 		}
 
 		var b = document.createElement ("b");
 		b.innerHTML = "Код для превью:";
-		div.appendChild (b);
-		div.appendChild (document.createElement ("br"));
+		wrapDiv.appendChild (b);
+		wrapDiv.appendChild (document.createElement ("br"));
 		var bigInput = document.createElement ("input");
 		bigInput.className = "auto-select";
 		bigInput.size = 70;
-		bigInput.value = "<a href=\"/content/"+picsDir+"/"+self.itemName+"/"+array.big+"\"><img src=\"/content/"+picsDir+"/"+self.itemName+"/"+array.small+"\" /></a>";
-		div.appendChild (bigInput);
+		bigInput.value = "<a class=\"fancybox\" href=\"/content/"+picsDir+"/"+self.itemName+"/"+array.big+"\"><img src=\"/content/"+picsDir+"/"+self.itemName+"/"+array.small+"\" /></a>";
+		wrapDiv.appendChild (bigInput);
+		
+		var p = document.createElement ("p");
+		var a = document.createElement ("a");
+		a.className = "addPicLink";
+		a.innerHTML = "Добавить в текст";
+		a.href = "javascript:;";
+		a.onclick = function() { addPictureByUrl ( this ); };
+		p.appendChild ( a );
+		wrapDiv.appendChild ( p );
+
+		div.appendChild ( wrapDiv );
 		self.picsDiv.append (div);
 
-		bigInput.onclick = function() {this.select();}
-		smallInput.onclick = function() {this.select();}
+		bigInput.onclick = function() { this.select(); };
+		smallInput.onclick = function() { this.select(); };
 
-		$("#uploadedPics").show ("slow");
 		var fup = document.createElement ("input");
 		fup.type = "file";
 		fup.id = "picUpld";
 		fup.name = "picUpld";
 		fup.className = "file";
-		fup.onchange = function() {self.observeFileField (this)};
+		fup.onchange = function() { self.observeFileField ( this ); };
 
 		$("#inputFileHolder").append (fup);
+		$("#pics").show ("slow");
 	}
 
 	this.uploadError = function (json)

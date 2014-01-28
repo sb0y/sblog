@@ -1,8 +1,7 @@
-{extends file="main.tpl"}
 {block name=title}Регистрация нового пользователя{/block}
 {block name=body}
-<div class="posts-list post">
-	<p><h2 class="page-title">Регистрация нового пользователя</h2></p>
+
+	<h2 class="page-title">Регистрация нового пользователя</h2>
 	{if !isset ($successReg) nocache}
 	{*if !empty($errors)}
 		<div class="error-block">
@@ -14,10 +13,11 @@
 		</div>
 	{/if*}
 	<form method="post" name="registration" action="{$urlBase}user/registration" enctype="multipart/form-data">
-	{include file="includes/forms/userForm.tpl" sendText="Зарегистрироваться" nocache}
+	{assign sendText "Зарегистрироваться"}
+	{include file="includes/forms/userForm.tpl" nocache}
 	</form>
 	{else}
 	{include file="ajax/userSuccessRegister.tpl" nocache}
 	{/if}
-</div>
+
 {/block}

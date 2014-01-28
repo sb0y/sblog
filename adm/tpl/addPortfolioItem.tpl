@@ -5,7 +5,7 @@
 	var picsDir = "portfolioPics";
 	var contentAdress = urlBase+"content/"+picsDir;
 </script>
-<script type="text/javascript" src="/adm/resources/js/ajaxPicUpload.js"></script>
+<script type="text/javascript" src="{$urlBase}resources/js/ajaxPicUpload.js"></script>
 {/block}
 {block name=body}
 {include file="includes/forms/portfolioItem.tpl" nocache}

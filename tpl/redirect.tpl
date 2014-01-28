@@ -1,4 +1,4 @@
-{extends file="main.tpl"}
+{block name=title}Перенаправление на страницу "{$url}"{/block}
 {block name=body}
 <div class="posts-list post">
 	<p><span class="strong">{nocache}{$text}{/nocache}</span><br />

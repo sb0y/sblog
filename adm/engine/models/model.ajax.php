@@ -44,50 +44,95 @@ class ajax extends model_base
 
 		if (isset ($_POST["ajaxFileUpload"]) && isset ($_POST["pageDir"]))
 		{
-			$uploadedPics = blog::uploadOnePicture ($_POST["slug"], $_POST["pageDir"]);
-			$uploadedPics["itemName"] = $_POST["slug"];
+			if ( isset ( $_POST["slug"] ) && $_POST["slug"] )
+				$slug = preg_replace ( "/[^a-zа-яё0-9\-\_]+/i", '', $_POST["slug"] );
+			else $slug = "";
+
+			if ( isset ( $_POST["pageDir"] ) && $_POST["pageDir"] )
+				$pageDir = preg_replace ( "/[^a-z0-9]+/i", '', $_POST["pageDir"] );
+			else $pageDir = "";
+
+			$uploadedPics = blog::uploadOnePicture ( $slug, $pageDir );
+			$uploadedPics["picUpld"]["itemName"] = $slug;
 
 			if (!empty ($uploadedPics))
 			{
-				echo '<script type="text/javascript">parent.pupld.uploadFinished ("'.addslashes(json_encode($uploadedPics)).'")</script>';
+				echo '<script type="text/javascript">parent.pupld.uploadFinished ("'.addslashes(json_encode($uploadedPics["picUpld"])).'")</script>';
 			}
 		}
 	}
 
-	public static function deletePicture()
+	public static function checkPost()
 	{
+		$result = array();
+
 		if (!isset ($_POST["pictureDelete"]) || 
 			!isset ($_POST["picsDir"]) ||
 			!isset ($_POST["dirName"]))
 		{
-			return;
+			return $result;
 		}
 
-		$dir = CONTENT_PATH."/".$_POST["picsDir"]."/".$_POST["dirName"];
+		if ( isset ( $_POST["picsDir"] ) && $_POST["picsDir"] )
+			$result ["picsDir"] = preg_replace ( "/[^a-z0-9\-\_]+/i", '', $_POST["picsDir"] );
+		else $result ["picsDir"] = "";
 
-		if (is_dir($dir))
+		if ( isset ( $_POST["dirName"] ) && $_POST["dirName"] )
+			$result ["dirName"] = preg_replace ( "/[^a-z0-9\-\_]+/i", '', $_POST["dirName"] );
+		else $result ["dirName"] = "";
+
+		if ( isset ( $_POST["pictureDelete"] ) && $_POST["pictureDelete"] )
+			$result ["pictureDelete"] = preg_replace ( "/[^a-z0-9\-\_]+/i", '', $_POST["pictureDelete"] );
+		else $result ["pictureDelete"] = "";
+
+		return $result;
+	}
+
+	public static function deletePicture()
+	{
+		$post = self::checkPost();
+
+		if (!$post)
+			return;
+
+		$dir = CONTENT_PATH."/".$post["picsDir"]."/".$post["dirName"];
+
+		if ( is_dir ( $dir ) )
 		{
-			$dh = opendir ($dir);
-			while (false !== ($filename = readdir($dh)))
+			$dh = opendir ( $dir );
+			while ( false !== ( $filename = readdir ( $dh ) ) )
 			{
-				if ($filename == '.' || $filename == "..")
+				if ( $filename == '.' || $filename == ".." )
 					continue;
 
-				$fl = explode ('.', $filename);
+				$fl = explode ( '.', $filename );
 
-				if ($fl[0] == $_POST["pictureDelete"])
+				if ( $fl[0] == $post["pictureDelete"] )
 				{
-					unlink ($dir."/".$filename);
+					unlink ( $dir."/".$filename );
 
-					if (file_exists($dir."/".$fl[0]."_small.jpeg"))
-						unlink ($dir."/".$fl[0]."_small.jpeg");
-					
-					echo "Ok";
-					break;
+				} else {
+
+					if ( preg_match ( "~({$post["pictureDelete"]}_(?:small|customSized).(?:png|jpeg))~Uuims", $filename, $match ) )
+					{
+						unlink ( $dir."/".$match[1] );
+					}
 				}
 			}
 
-			closedir ($dh);
+			closedir ( $dh );
+			echo "Ok";
 		}
+	}
+
+	public static function deletePoster()
+	{
+		$post = self::checkPost();
+
+		if (!$post)
+			return;
+
+		if ( self::$db->updateTable ( "content", array ( "poster"=>"" ), "slug", $post["pictureDelete"] ) );
+			self::deletePicture();
 	}
 }

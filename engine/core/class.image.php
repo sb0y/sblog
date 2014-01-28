@@ -24,7 +24,7 @@
 
 class image 
 {
-	private $currentImgInfo = array(), $currentFile = '';
+	private $currentImgInfo = array(), $currentFile = '', $saveOriginal = true, $additionalProcessing = array();
 	public $picWidth, $picHeight;
 	
 	function __construct ($picWidth, $picHeight)
@@ -33,111 +33,137 @@ class image
 		$this->picHeight = $picHeight;
 	}
 	
-	function getMime ($file)
+	function getMime ( $file )
 	{
-		/*static $finfo;
+		$this->currentImgInfo["mimeInfo"] = getimagesize ( $file );				
+		
+		$finfo = new finfo;
+		$type = $finfo->file ( $file, FILEINFO_MIME );
+		$type = preg_replace ( "/;.*$/", "", $type );
+		$this->currentImgInfo["mimeInfo"]["mime"] = $type;
 
-		if (!is_object ($finfo))
-		{
-			$finfo = new finfo (FILEINFO_MIME, "/usr/share/misc/magic.mgc"); // return mime type ala mimetype extension
-		}
-		 	return $finfo->file ($file);
-		*/
-
-		$this->currentImgInfo["mimeInfo"] = getimagesize ($file);
-						
 		return $this->currentImgInfo;
-
 	}
 	
-	function resize ($file)
+	function resize ( $file, $postfix = "small" )
 	{
+		$isOk = true;
 		$s = $this->currentImgInfo["mimeInfo"];
 		
 		$max_x = $this->picWidth;
 		$max_y = $this->picHeight;
 		
 		// return the original file name if not needed to resize
-		if ($s [0] <= $max_x && $s [1] <= $max_y)
+		if ( $s[0] <= $max_x && $s[1] <= $max_y )
 			return $file;
 
 		$format = $this->currentImgInfo["format"];
 		
-		if ($this->currentImgInfo["format"]!="jpeg" && $this->currentImgInfo["format"]!="gif") 
-				$this->currentImgInfo["format"] = "jpeg";	
-		
 		$icfunc = "imagecreatefrom" . $format;
-		
-		$outFile = $this->currentImgInfo["file"]."_small.".$this->currentImgInfo["format"];
 
-		if (!function_exists($icfunc))
+		if ( $format != "jpeg" && $format != "gif" && $format != "png" ) 
+			$format = "jpeg";
+	
+		$outFile = $this->currentImgInfo["file"]."_$postfix.".$format;
+
+		if ( !function_exists ( $icfunc ) )
 		{
 			return false;
 		}
 
-		$source = $icfunc ($file);
+		$source = $icfunc ( $file );
 
 		$ratio_x = 1;
 		$ratio_y = 1;
 
-		$ratio_x = $max_x / $s [0];
-		$ratio_y = $max_y / $s [1];
+		$ratio_x = $max_x / $s[0];
+		$ratio_y = $max_y / $s[1];
 
-		$ratio = min ($ratio_x, $ratio_y);
+		$ratio = min ( $ratio_x, $ratio_y );
 
-		$new_size_x = floor ($s [0] * $ratio);
-		$new_size_y = floor ($s [1] * $ratio);
+		$new_size_x = floor ( $s[0] * $ratio );
+		$new_size_y = floor ( $s[1] * $ratio );
 
-		$resource = imagecreatetruecolor ($new_size_x, $new_size_y);
+		$resource = imagecreatetruecolor ( $new_size_x, $new_size_y );
 
-		if (imagecopyresampled ($resource, $source, 0, 0, 0, 0, $new_size_x, $new_size_y, $s [0], $s [1]))
+		imagealphablending ( $resource, false );
+		imagesavealpha ( $resource, true );
+
+		if ( !imagecopyresampled ( $resource, $source, 0, 0, 0, 0, $new_size_x, $new_size_y, $s[0], $s[1] ) )
 		{
-			if ($format == "gif" && function_exists ("imagegif"))
-			{
-				imagegif ($resource, $outFile);
-			} else {
-				imagejpeg ($resource, $outFile, 80);
-			}
-			
-			imagedestroy ($resource);
-			
-			return $outFile;
-		} else {
-			return null;
+			$isOk = false;
 		}
+
+		if ( $format == "gif" && function_exists ( "imagegif" ) )
+		{
+			imagegif ( $resource, $outFile );
+
+		} else if ( $format == "png" && function_exists ( "imagepng" ) ) {
+
+			imagepng ( $resource, $outFile, 7 );
+
+		} else {
+
+			imagejpeg ( $resource, $outFile, 80 );
+		}
+						
+		imagedestroy ( $resource );
 		
-		return false;
+		if ( $isOk )
+			return $outFile;
+		else return false;
 	}
 	
-	function processImage ($inFile, $outFile=false)
+	function processImage ( $inFile, $outFile = false, $imgID = "" )
 	{
-		if ($outFile)
+		$result = array ( "big"=>NULL, "small"=>NULL );
+
+		if ( $outFile )
 		{
 			$this->currentImgInfo["file"] = $outFile;
 		}
 
-		if (!$this->currentImgInfo)
-			return array ("big"=>"NULL", "small"=>"NULL");
+		if ( !$this->currentImgInfo )
+			return $result;
 		
 		$file = $this->currentImgInfo["file"] . '.' . $this->currentImgInfo["format"];
 
-		if (is_uploaded_file ($inFile))
-			move_uploaded_file ($inFile, $file);
-		else rename ($inFile, $file);
+		if ( is_uploaded_file ( $inFile ) )
+			move_uploaded_file ( $inFile, $file );
+		else rename ( $inFile, $file );
 		
-		$smallImg = $this->resize ($file);
+		$smallImg = $this->resize ( $file );
+
+		if ( isset ( $this->additionalProcessing ) && isset ( $this->additionalProcessing[$imgID] ) )
+		{
+			foreach ( $this->additionalProcessing[$imgID] as $k=>$v )
+			{
+				$this->width = $v["sizes"][0];
+				$this->height = $v["sizes"][1];
+
+				$result["customSized"][] = basename ( $this->resize ( $file, "customSized" ) );
+			}
+		}
 		
 		$this->currentImgInfo = array();
+		$this->additionalProcessing = array();
+
+		$result["small"] = basename ( $smallImg );
+
+		if ( !$this->saveOriginal )
+		{
+			unlink ( $file );
+		} else $result["big"] = basename ( $file );
 		
-		return array ("big"=>basename ($file), "small"=>basename ($smallImg));
+		return $result;
 	}
 	
-	function extendFormat ($file)
+	function extendFormat ( $file )
 	{
-		$this->getMime ($file);
-		$fullFormat = explode ('/', $this->currentImgInfo["mimeInfo"]["mime"]);
+		$this->getMime ( $file );
+		$fullFormat = explode ( '/', $this->currentImgInfo["mimeInfo"]["mime"] );
 		
-		if ($fullFormat[0] == "image")
+		if ( $fullFormat[0] == "image" )
 		{
 			$this->currentImgInfo["format"] = $fullFormat[1];
 			return $fullFormat[1];
@@ -145,31 +171,41 @@ class image
 		
 		return false;
 	}
+
+	function setSaveOriginal ( bool $value )
+	{
+		$this->saveOriginal = $value;
+	}
 	
-	function handleAllUploads (array &$outNames)
+	function handleAllUploads ( array &$outNames )
 	{
 		if (empty ($_FILES))
 			return false;
 		
-		foreach ($_FILES as $k=>$v)
+		foreach ( $_FILES as $k=>$v )
 		{
-			if (!isset ($outNames[$k]) || $v["error"]!==0)
+			if ( !isset ( $outNames[$k] ) || $v["error"] !== 0 )
 				continue;
 				
 			$this->currentImgInfo["file"] =& $outNames[$k];
 			
-			if (is_uploaded_file ($v["tmp_name"]))
+			if ( is_uploaded_file ( $v["tmp_name"] ) )
 			{
-				if ($this->extendFormat ($v["tmp_name"]))
+				if ( $this->extendFormat ( $v["tmp_name"] ) )
 				{
-					$this->currentImgInfo["file"] = $this->processImage ($v["tmp_name"]);
+					$this->currentImgInfo["file"] = $this->processImage ( $v["tmp_name"], false, $k );
 					$outNames[$k] = $this->currentImgInfo["file"];
 				}
 				
 			} else {
-				throw new Exception ("Secure Update Error"); 
+				throw new Exception ( "Secure Update Error" ); 
 			}
 		}
+	}
+
+	function additionalProcessing ( $imgID, $width, $height )
+	{
+		$this->additionalProcessing[$imgID][]["sizes"] = array ( $width, $height );
 	}
 	
 }

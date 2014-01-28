@@ -1,3 +1,0 @@
-table.sortable thead tr th div {cursor:pointer;vertical-align:middle;}
-table.sortable thead tr th div.colDown {background:url('../../resource/images/sort_down.gif') no-repeat left center; padding-left: 15px}
-table.sortable thead tr th div.colUp {background:url('../../resource/images/sort_up.gif') no-repeat left center; padding-left: 15px}

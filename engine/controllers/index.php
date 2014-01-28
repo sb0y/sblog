@@ -23,19 +23,27 @@ class controller_index extends controller_base
 {
 	function index()
 	{
-		if ($this->args[0] == "index")
+		if ( $this->args[0] == "index" )
 		{
-			$this->smarty->setCacheID ("MAINPAGE|offset_0");
-			if (!$this->smarty->isCached ("main.tpl", "MAINPAGE|offset_0"))
+			$this->smarty->setCacheID ( "MAINPAGE|NEWS" );
+			
+			if ( !$this->smarty->isCached() )
 			{
-				$sqlData = index::mainPage();
-				$this->smarty->assign ("posts", $sqlData);
+				$sqlData = news::getMainPageArray ( array ( "start"=>0, "end"=>20 ) );
+				$this->smarty->assign ( "posts", $sqlData );
 			}
 
-			$this->smarty->assign ("pagination", true);
+			$this->smarty->assign ( "pagination", true );
 		} else {
-			system::setParam ("page", "static/".$this->args[0]);
+			system::redirect ( '/' );
 		}
+	}
+
+	function staticPage()
+	{
+		$page = array_shift ( $this->args );
+		$this->smarty->setCacheID ( "STATIC|" . $page );
+		system::setParam ( "page", "static/$page" );
 	}
 
 	function start()

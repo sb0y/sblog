@@ -33,7 +33,7 @@ class pagination
 		$this->allCount = $allCount;
 	}
 	
-	function readInputData ($page, $perPage=10)
+	function readInputData ( $page, $perPage=10 )
 	{
 		$this->page = intval ($page);
 		$this->perPage = $perPage;
@@ -50,6 +50,11 @@ class pagination
 		   $this->page = 1;
 		}
 	}
+
+	function setPerPage ( $pages = 10 )
+	{
+		$this->perPage = $pages;
+	}
 	
 	function calculateOffset()
 	{
@@ -61,11 +66,11 @@ class pagination
 	
 	function genPages()
 	{
-		for ($x = ($this->page - $this->range); 
-			 $x < (($this->page + $this->range) + 1);
-			 ++$x) 
+		for ( $x = ( $this->page - $this->range ); 
+			 ( ( $this->page + $this->range ) > $x );
+			 ++$x ) 
 		{
-			if (($x > 0) && ($x <= $this->pagesCount)) 
+			if ( ($x > 0) && ( $x < $this->pagesCount + 1 ) ) 
 			{
 				if ($x == $this->page) 
 				{

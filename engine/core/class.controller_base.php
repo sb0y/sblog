@@ -28,9 +28,9 @@ abstract class controller_base
 	{
 		$errors = $core->checkPermissions();
 
-		if ($errors)
+		if ( $errors )
 		{
-			throw new _Exception ($errors);
+			throw new _Exception ( $errors );
 		}
 
 		foreach ($core->objectInheritance as $property)
@@ -42,7 +42,22 @@ abstract class controller_base
 		}
 	}
 
+	private function runPreloadHandlers()
+	{
+		
+	}
+
+	public function search()
+	{
+		$sp = "";
+
+		if ( isset ( $_GET["text"] ) && $_GET["text"] )
+			$sp = "?text=" . urlencode ( $_GET["text"] );
+
+		return system::redirect ( "/search$sp" );
+	}
+
 	abstract function index();
-	abstract function requestModels (&$modelsNeeded);
+	abstract function requestModels ( &$modelsNeeded );
 	abstract function start();
 }

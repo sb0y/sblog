@@ -58,7 +58,7 @@ class controller_users extends controller_base
 		blog::buildForm ("users", "AND `userID`=".$this->args[0]);
 
 		if ($doRedirect)
-			system::redirect ("/adm/users");
+			system::redirect (system::param ("urlBase")."users");
 	}
 
 	function add()
@@ -80,7 +80,7 @@ class controller_users extends controller_base
 		}
 
 		if ($doRedirect)
-			system::redirect ("/adm/users");
+			system::redirect (system::param ("urlBase")."users");
 	}
 	
 	function requestModels (&$modelsNeeded)

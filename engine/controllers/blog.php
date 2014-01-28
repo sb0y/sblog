@@ -25,30 +25,26 @@ class controller_blog extends controller_base
 	{
 		system::setParam ("page", "post");
 
-		if ($this->args[0] != "blog")
+		if ( $this->args[0] != "index" )
 		{
-			$cacheID = $this->args[0]."|POST";
-			$this->smarty->setCacheID ($cacheID);
+			$cacheID = $this->args[0] . "|BLOGPOST";
+			$this->smarty->setCacheID ( $cacheID );
 
-			if (isset ($_POST["contentID"]))
+            if ( isset ( $_POST["contentID"] ) && $_POST["contentID"] )
 			{
-				blog::addComment (intval($_POST["contentID"]));
-				//$this->smarty->clearCache ("post.tpl");
+				comments::add ( intval ( $_POST["contentID"] ) );
 			}
 
-			if (!$this->smarty->isCached ("post.tpl", $cacheID))
+			$this->smarty->assign ( "isFav", blog::isFavorite ( $this->args[0] ) );
+
+			if ( !$this->smarty->isCached() )
 			{
-				$sqlData = blog::getOnePost ($this->args[0])->fetchAll();
+				$sqlData = blog::getOnePost ( $this->args[0] )->fetch();
 											
-				if ($sqlData)
-				{
-					$sqlData = array_shift ($sqlData);
-					
-					$comments = comments::get ($sqlData["contentID"]);
-					$this->smarty->assign ("comments", $comments);
-					
-					blog::highlightCode ($sqlData["body"]);		
-					$this->smarty->assign ("post", $sqlData);
+				if ( $sqlData )
+				{					
+					$this->smarty->assign ( "comments", comments::get ( $sqlData["contentID"] ) );
+					$this->smarty->assign ( "post", $sqlData );
 				}
 			}
 		} else system::redirect ("/");
@@ -59,102 +55,140 @@ class controller_blog extends controller_base
 		
 	}
 	
-	function category()
+	function category() 
 	{
-		if (!isset ($this->args[1]))
-			redirect ("/");
+		if ( !isset ( $this->args[1] ) )
+			system::redirect ( "/" );
+
+		system::setParam ("page", "categoryBlog");
+		$offset = 0;
+
+		if ( isset ( $this->get [ "offset" ] ) )
+			$offset = intval ( $this->get["offset"] );
 
 		$catSlug = $this->args[1];
-		$cacheID = "CATSELECT|$catSlug";
+		$cacheID = "CATSELECT|BLOG|$catSlug|catoffset_$offset";
 
-		$this->smarty->setCacheID ($cacheID);
+		$this->smarty->setCacheID ( $cacheID );
 
-		if (!$this->smarty->isCached ("categoryBlog.tpl", $cacheID))
+		if ( !$this->smarty->isCached() )
 		{
-			$posts = blog::getPostsByCategory ($catSlug)->fetchAll();
-			$this->smarty->assign ("posts", $posts);
-			$this->smarty->assign ("catName", $posts[0]["catName"]);
+			$allCount = $this->db->query ( "SELECT COUNT(*) as cnt FROM `content` as c, 
+				`content_category` as cc WHERE cc.`contentID`=c.`contentID` AND c.`type`='news' AND c.`slug`='?'", $this->args[1] )->fetch();
+			
+			$posts = blog::getPostsByCategory ( $catSlug, core::pagination ( $allCount["cnt"], $offset ) )->fetchAll();
+			$this->smarty->assign ( "posts", $posts );
+			$catName = array_shift ( $posts );
+			$catName = array_shift ( $catName["cats"] );
+			$this->smarty->assign ( "catName", $catName ["catName"] );
 		}
 		
-		system::setParam ("page", "categoryBlog");
 	}
 	
 	function date()
 	{
 		system::setParam ("page", "blogByDate");
-		$cacheID = "DTSELECT";
+		$offset = 0;
 
-		if (isset ($this->args[1]))
+		if ( isset ( $this->get [ "offset" ] ) )
+			$offset = intval ( $this->get["offset"] );
+
+		$cacheID = "DTSELECT|dateoffset_$offset";
+
+		if ( isset ( $this->args[1] ) )
 		{
-			$date = preg_replace ("/[^0-9.]/uims", '', $this->args[1]);
-			$cacheID = $date."|". $cacheID;
+			$date = preg_replace ( "/[^0-9.]/uims", '', $this->args[1] );
+			$cacheID = $date . "|" . $cacheID;
 		}
 
-		$this->smarty->setCacheID ($cacheID);
+		$this->smarty->setCacheID ( $cacheID );
 
-		if (!$this->smarty->isCached ("blogByDate.tpl", $cacheID))
+		if ( !$this->smarty->isCached() )
 		{
-			$posts = blog::getPostsByDate ($date)->fetchAll();
-			$this->smarty->assign ("posts", $posts);
-			$this->smarty->assign ("date", $date);
+			$allCount = $this->db->query ( "SELECT COUNT(*) as cnt FROM `content` as c, `content_category` as cc, `categories` as cts WHERE 
+			cc.`contentID`=c.`contentID` AND c.`type`='news' AND cts.`categoryID`=cc.`catID` AND c.`showOnSite`='Y' AND c.`dt` >= 
+			STR_TO_DATE ('?', '%d.%m.%Y')", $date )->fetch();
+
+			$posts = blog::getPostsByDate ( $date, core::pagination ( $allCount["cnt"], $offset ) )->fetchAll();
+			$this->smarty->assign ( "posts", $posts );
+			$this->smarty->assign ( "date", $date );
 		}
 	}
 	
-	function requestModels (&$modelsNeeded)
+	function requestModels ( &$modelsNeeded )
 	{
-		$modelsNeeded = array();
+		$modelsNeeded = array ( "search" );
 	}
 
 	function search()
 	{
-		system::setParam ("page", "search");
+		system::setParam ( "page", "search" );
 
-		if (!empty ($_GET["text"]))
+		if ( !empty ( $_GET["text"] ) )
 		{
-			$words = $_GET["text"];
-			$cacheID = "SEARCH_RES|$words";
+			$words = htmlspecialchars ( addslashes ( $_GET["text"] ) );
+			$offset = 0;
 
-			$this->smarty->assign ("searchWord", addslashes($words));
+			if ( isset ( $this->get [ "offset" ] ) )
+				$offset = intval ( $this->get["offset"] );
 
-			if (mb_strlen ($words) <= 2)
+			$cacheID = "SEARCH_RES|$words|typeNews|blogsearchoffset_$offset";
+
+			$this->smarty->assign ( "searchWord", $words );
+
+			if ( mb_strlen ( $words ) <= 2 )
 			{
-				$this->smarty->assign ("smallWord", true);
+				$this->smarty->assign ( "smallWord", true );
 				return false;
 			}
 
-			$this->smarty->setCacheID ($cacheID);
+			$this->smarty->setCacheID ( $cacheID );
 
-			if (!$this->smarty->isCached ("search.tpl", $cacheID))
+			if ( !$this->smarty->isCached() )
 			{
-				$res = blog::search ($words);
+				$res = search::searchWithType ( $words, "news" );
 
-				if ($res->num_rows > 0)
+				if ( $res->getNumRows() > 0 )
 				{
 					$posts = $res->fetchAll();
-					$this->smarty->assign ("searchRes", $posts);
+					$this->smarty->assign ( "searchRes", $posts );
 				}
 			}
-
-			//this->smarty->clearCache ("main.tpl");
-			//$this->smarty->clearCache ("search.tpl");
 
 		} else system::redirect ('/');
 	}
 
 	function offset()
 	{
-		if (!isset ($this->args[1]) || !$this->args[1])
-			return system::redirect ('/');
+		if ( !isset ( $this->args[1] ) || !$this->args[1] )
+			return system::redirect ( '/' );
 
-		$cacheID = "MAINPAGE|offset_".$this->args[1];
-		$this->smarty->setCacheID ($cacheID);
+		$cacheID = "MAINPAGE|offset_" . $this->args[1];
+		$this->smarty->setCacheID ( $cacheID );
 
-		if (!$this->smarty->isCached ("main.tpl", $cacheID))
+		if ( !$this->smarty->isCached() )
 		{
 			$sqlData = index::mainPage();
 			$this->smarty->assign ("posts", $sqlData);
 			$this->smarty->assign ("pagination", true);
 		}
+	}
+
+	function rss()
+	{
+		system::$display = false;
+		rss::setHTTPHeaders();
+
+		$this->smarty->setCacheID ("RSS|BLOG");
+
+		if ( !$this->smarty->isCached() )
+		{
+			$sqlData = rss::getLastPostsWithType ( "news" );
+			$items = $sqlData->fetchAll();
+			$this->smarty->assign ( "items", $items );
+		}
+		
+		echo $this->smarty->fetch ( TPL_PATH . "/rss/rssMain.tpl", "RSS|BLOG" );
 	}
 
 }

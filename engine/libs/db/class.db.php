@@ -49,19 +49,7 @@ class db
 
 	private function generateRandomString ($length = 10) 
 	{
-        list ($usec, $sec) = explode(' ', microtime() );
-        srand ( (float) $sec + ((float) $usec * 100000) );
-    	return substr ( str_shuffle ("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), ( rand() % time() ), $length );
-	}
-
-	private function hex2string ($str)
-	{
-		return str_replace ($this->uniqueQueryKey, "?", $str);
-	}
-
-	private function string2hex ($str)
-	{
-		return str_replace ("?", $this->uniqueQueryKey, $str);
+        return substr ( MD5 ( microtime() ), 0, $length );
 	}
 
 	public function init ($configArray=null)
@@ -102,13 +90,14 @@ class db
 
 	private function replaceVars (&$query, $args)
 	{
-		$tmp = explode ('?', $query);
+		$query = str_replace ( '?', $this->uniqueQueryKey, $query );
+
+		$tmp = explode ( $this->uniqueQueryKey, $query );
 			
 		foreach ($args as $k=>$v)
-		{	
-			$v = $this->string2hex ($v);
-			$this->escapeString ($v);
-			$tmp[$k] .= $this->string2hex ($v);	
+		{
+			$v = $this->escapeString ($v);
+			$tmp[$k] .= $v;	
 		}
 				
 		$query = implode ('', $tmp);
@@ -126,17 +115,12 @@ class db
 		
 		if (count ($args) >= 1)
 		{
-			foreach ($args as $k=>$v)
-			{
-				$args[$k] = $this->hex2string ($args[$k]);
-			}
-							
 			$this->replaceVars ($query, $args);
-
 		}
 
 		try 
 		{
+			//echo $query;
 			$this->dbObj->real_query ($query);
 
 			if (mysqli_error ($this->dbObj))
@@ -166,11 +150,10 @@ class db
 		return mysqli_insert_id ($this->dbObj);
 	}
 	
-	public function escapeString (&$string)
+	public function escapeString ( $string )
 	{
 		$this->init();
-		$string = $this->dbObj->real_escape_string ($string);
-		return $string;
+		return $this->dbObj->real_escape_string ( $string );
 	}
 	
 	public function updateTable ($table, $data=array(), $idName, $id)
@@ -181,14 +164,24 @@ class db
 		{
 			foreach ($data as $k=>$v)
 			{
-				$tmp[] = "`$k`='".$this->escapeString ($v)."'";
+				$v = $this->escapeString ( $v );
+
+				if ( is_numeric ( $v ) )
+					$tmp[] = "`$k`=$v";
+				else $tmp[] = "`$k`='$v'";
 			}
 			
-			if (!empty ($tmp))
+			if ( !empty ($tmp) )
 			{
-				$this->query ("UPDATE `$table` SET ".implode (", ", $tmp)." WHERE `$idName`=?", $id);
+				if ( is_numeric ( $id ) )
+					$q = intval ( $id );
+				else $q = "'" . $this->escapeString ( $id ) . "'";
+
+				return $this->query ("UPDATE `$table` SET ".implode (",", $tmp)." WHERE `$idName`=$id");
 			}
 		}
+
+		return false;
 	}
 
 	public function buildHtmlLog ($show_types = array (db::INFO, db::ERROR, db::SUCCESS))
@@ -247,8 +240,15 @@ class db
 
 class db_result extends mysqli_result
 {
-	public $runAfterFetchAll = array();
-	
+	public $runAfterFetchAll = array(), $runAfterFetch = array();
+	private $availableForFree = false;
+
+	public function __destruct()
+	{
+		if ( $this->availableForFree )
+            $this->free();
+	}
+
     public function __call ($funcName, $args)
     {
 		$navArray =& $this->$funcName;
@@ -258,7 +258,7 @@ class db_result extends mysqli_result
 				$args[$k] = &$v;
 
 		$runFunc = $navArray2[0];
-		if (count ($navArray2) > 1)
+		if ( count ($navArray2) > 1 )
 		{
 			$runFunc .= "::".$navArray2[1];
 		}
@@ -268,10 +268,20 @@ class db_result extends mysqli_result
     }
 	
 	public function fetch()
-    {		
-		$array = $this->fetch_assoc();
+    {
+        $result = $this->fetch_assoc();
+    
+		while (!empty ($this->runAfterFetch))
+		{
+			if ( !$result )
+				break;
 
-        return $array;
+			$result = $this->runAfterFetch ( $result );
+		}
+
+        $this->availableForFree = true;
+
+        return $result;
     }
         
     public function fetchAll ($limit=false)
@@ -294,15 +304,25 @@ class db_result extends mysqli_result
 			$rows = $this->runAfterFetchAll ($rows);
 		}*/
 
-		while (!empty ($this->runAfterFetchAll))
+		while ( !empty ( $this->runAfterFetchAll ) )
 		{
+			if ( !$rows )
+				break;
+
 			$rows = $this->runAfterFetchAll ($rows);
 		}
 
 		//for ($i=0; (!empty ($this->runAfterFetch) && count ($this->runAfterFetch) > $i); ++$i)
 		//	$rows = $this->runAfterFetch ($rows);
 		
+        $this->availableForFree = true;
+
 		return $rows;
+	}
+
+	public function getNumRows()
+	{
+		return $this->num_rows;
 	}
 }
 

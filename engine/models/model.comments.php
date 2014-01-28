@@ -84,45 +84,145 @@ class comments extends model_base
 
 	public static function bbcodes ($text)
 	{
-		while (preg_match("/\[quote\](.*?)\[\/quote\]/ise", $text, $match))
+		while ( preg_match ( "/\[quote(.*?)\](.*?)\[\/quote\]/ise", $text, $match ) )
 		{
-			#print_r ($match);
-			$search = "~".preg_quote ($match[0])."~si";
-			$replace = "<blockquote>".$match[1]."</blockquote>";
-			$text = preg_replace ($search, $replace, $text);
-			$match = "";
+			$quoteUserName = "";
+
+			if ( isset ( $match[1] ) && $match[1] )
+				$quoteUserName = trim ( str_replace ( '=', '', $match[1] ) );
+
+			$search = "~(".preg_quote ($match[0])."?)~si";
+			$replace = "<blockquote>";
+
+			if ( $quoteUserName )
+			{
+				$replace .= "<p><span id=\"$quoteUserName\" class=\"quoteAuthor\" style=\"font-weight:bold;\">Сообщение от пользователя $quoteUserName</span></p>";
+			}
+
+			$replace .= $match[2] . "</blockquote>";
+			$text = preg_replace ( $search, $replace, $text );
 		}
 		
 		$bbcode = array(
-		"/\[b\](.*?)\[\/b\]/is" => "<span style=\"font-weight: bold\">$1</span>",
-		"/\[u\](.*?)\[\/u\]/is" => "<span style=\"text-decoration: underline\">$1</span>",
-		"/\[i\](.*?)\[\/i\]/is" => "<span style=\"font-style: italic\">$1</span>",
-		"/\[s\](.*?)\[\/s\]/is" => "<span style=\"text-decoration: line-through\">$1</span>",
-		"/\[url\=(.*?)\](.*?)\[\/url\]/is" => "<a href=\"$1\">$2</a>",
-		"/\[size\=(.*?)\](.*?)\[\/size\]/is" => "<span style=\"font-size:$1;\">$2</span>",
-		"/\[color\=(.*?)\](.*?)\[\/color\]/is" => "<span style=\"color:$1;\">$2</span>",
-		"/\[code\=(.*?)\](.*?)\[\/code\]/is" => "<pre lang=$1>$2</pre>"
+			"/\[b\](.*?)\[\/b\]/is" => "<span style=\"font-weight:bold;\">$1</span>",
+			"/\[u\](.*?)\[\/u\]/is" => "<span style=\"text-decoration:underline;\">$1</span>",
+			"/\[i\](.*?)\[\/i\]/is" => "<span style=\"font-style:italic;\">$1</span>",
+			"/\[s\](.*?)\[\/s\]/is" => "<span style=\"text-decoration:line-through;\">$1</span>",
+			"/\[url\=(.*?)\](.*?)\[\/url\]/is" => "<a href=\"$1\">$2</a>",
+			//"/\[size\=(.*?)\](.*?)\[\/size\]/is" => "<span style=\"font-size:$1;\">$2</span>",
+			"/\[color\=(.*?)\](.*?)\[\/color\]/is" => "<span style=\"color:$1;\">$2</span>",
+			"/\[code\=(.*?)\](.*?)\[\/code\]/is" => "<pre lang=$1>$2</pre>"
 		);
 
-		$text = preg_replace (array_keys($bbcode), array_values($bbcode), $text);
+		$text = preg_replace ( array_keys ( $bbcode ), array_values ( $bbcode ), $text );
 
 		return $text;
 	}
 	
-	public static function get ($contentID)
+	public static function get ( $contentID )
 	{
-		$sqlData = self::$db->query ("SELECT *, c.`dt` FROM `comments` as c, `users` as u WHERE `contentID`=? AND u.`userID`=c.`userID` ORDER BY c.`dt`", $contentID)->fetchAll();
-		blog::highlightCode ($sqlData);
+		$sqlData = self::$db->query ( "SELECT *, c.`dt`, IF ( c.`reply_to`=0, '', " . 
+			"(SELECT u2.`nick` FROM `users` as u2, `comments` as c2 WHERE c2.`userID`=u2.`userID` AND c2.`commentID`=c.`reply_to`) ) as replyNick," .
+			"IF ( c.`reply_to`=0, '', (SELECT c2.`commentID` FROM `users` as u2, `comments` as c2 WHERE c2.`userID`=u2.`userID` AND c2.`commentID`=c.`reply_to`) ) as replyCommentID," .
+			"IF ( c.`reply_to`=0, '', (SELECT u2.`userID` FROM `users` as u2, `comments` as c2 WHERE c2.`userID`=u2.`userID` AND c2.`commentID`=c.`reply_to`) ) as replyUserID " .
+			"FROM `comments` as c, `users` as u WHERE `contentID`=? AND u.`userID`=c.`userID` ORDER BY c.`dt`", $contentID )->fetchAll();
 
-		foreach ($sqlData as $key => $value) 
-		{
-			$sqlData[$key]["body"] = nl2br($value["body"]);
-
-			if ($value["avatar_small"] == "NULL")
-				unset ( $sqlData[$key]["avatar_small"] );
-		}
+		$sqlData = array_filter ( $sqlData, create_function ( "\$a", 
+			"return ( ( isset ( \$a['avatar_small'] ) && \$a['avatar_small'] == 'NULL' ) ? false : true );" ) );
 
 		return $sqlData;
+	}
+
+	public static function add ( $contentID )
+	{
+		//echo $_POST["comment"];
+
+		if ( !isset ( $_SESSION["user"] ) )
+			return false;
+
+		$comment = comments::ex_strip_tags ($_POST["comment"]);
+		$comment = trim ( comments::bbcodes ( $comment ) );
+		$insip = isset ($_SERVER["REMOTE_ADDR"])?$_SERVER["REMOTE_ADDR"]:'';
+		$userID = intval ( $_SESSION["user"]["userID"] );
+
+		if ( !$comment )
+			return false;
+
+		$replyUID = 0;
+		$replyCommentID = 0;
+		$article = array();
+
+		if ( isset ( $_POST["replyUID"] ) && $_POST["replyUID"] )
+		{
+			$replyUID = intval ( $_POST["replyUID"] );
+		}
+
+		if ( isset ( $_POST["replyID"] ) && $_POST["replyID"] )
+		{
+			$replyCommentID = intval ( $_POST["replyID"] );
+		}
+
+		if ( $replyCommentID && $replyUID && $_SESSION["user"]["userID"] != $replyUID )
+		{
+			$rusers_res = self::$db->query ( "SELECT * FROM `users` WHERE `userID`=? LIMIT 1", $replyUID );
+
+			$article_res = self::$db->query ( "SELECT `title`,`type` FROM `content` WHERE `contentID`=? LIMIT 1", $contentID );
+			$article = $article_res->fetch();
+			$ruser = $rusers_res->fetch();
+
+			$ruser["article_title"] = $article["title"];
+			$ruser["article_returnPath"] = self::$routePath;
+			$ruser["type"] = $article["type"];
+			$ruser["commentID"] = $commentID;
+
+			self::$mail->assign ( "data", $ruser );
+			self::$mail->sendMail ( TPL_PATH . "/mail/mailNotifyReply.tpl", $ruser["email"] );
+		}
+
+		self::$db->query ("INSERT `comments` SET `contentID`=?, `userID`=?, `dt`=NOW(), `email`='?', `author`='?', `body`='?', `guest`='N', `ip`=INET_ATON('?'), `type`='?', `reply_to`=?", 
+			$contentID, $_SESSION["user"]["userID"], $_SESSION["user"]["email"], $_SESSION["user"]["nick"], $comment, $insip, self::$controllerCall, $replyCommentID );
+
+		$commentID = self::$db->insert_id();
+
+		self::$db->query ("UPDATE `content` SET `comments_count`=`comments_count`+1 WHERE `contentID`=? AND `type`='?'", $contentID, self::$controllerCall );
+
+		if ( isset ( $_POST["quotedUID"] ) && $_POST["quotedUID"] )
+		{
+			$qip = array_filter ( $_POST["quotedUID"], create_function ( "\$a", "return ( $userID == \$a ? false : true );" ) );
+			$qip = array_diff ( $qip, array ( $replyUID ) );
+
+			if ( $qip )
+			{
+				$qip = array_map ( "intval", $qip );
+				$qusers_res = self::$db->query ( "SELECT * FROM `users` WHERE `userID` IN (" . implode ( ",", $qip ) . ")" );
+
+				if ( $qusers_res->getNumRows() )
+				{
+					if ( $article )
+					{
+						$article_res = self::$db->query ( "SELECT `title`,`type` FROM `content` WHERE `contentID`=? LIMIT 1", $contentID );
+						$article = $article_res->fetch();
+					}
+
+					$qusers = $qusers_res->fetchAll();
+
+					foreach ( $qusers as $k => $v )
+					{
+						$v["article_title"] = $article["title"];
+						$v["article_returnPath"] = self::$routePath;
+						$v["type"] = $article["type"];
+						$v["commentID"] = $commentID;
+						self::$mail->assign ( "data", $v );
+						self::$mail->sendMail ( TPL_PATH . "/mail/mailNotifyQuote.tpl", $v["email"] );
+					}
+				}
+			}
+		}
+
+		self::$smarty->clearCurrentCache();
+		system::redirect ( "/" . self::$routePath . "/#comment_$commentID" );
+
+		return $commentID;
 	}
 
 }

@@ -1,6 +1,6 @@
 <?php
 class user extends model_base
-{	
+{
 	public static function start ()
 	{
 
@@ -109,10 +109,10 @@ class user extends model_base
 				$time = time()+3600*24*365;
 			} else $time = time()+3600*24*30;
 
-			$domain = system::param ("siteDomain");
-			setcookie ("id", $data["userID"], $time, '/', $domain);
-			setcookie ("hash", $hash, $time, '/', $domain);
-			system::$core->checkAuth ($data["userID"], $hash);
+			$domain = system::param ( "siteDomain" );
+			setcookie ( "id", $data["userID"], $time, '/', ".www.$domain" );
+			setcookie ( "hash", $hash, $time, '/', ".www.$domain" );
+			system::$core->checkAuth ( $data["userID"], $hash );
 			
 			return true;
 		}
@@ -122,11 +122,11 @@ class user extends model_base
 	
 	public static function socialRegister ($method, $data)
 	{
-		$res = self::$db->query ("SELECT * FROM `users` WHERE `socID`=? AND `source`='?'", $data->identifier, $method);
-		$nick = trim ($data->firstName.' '.$data->lastName);
-		
+		$res = self::$db->query ("SELECT * FROM `users` WHERE `socID`='?' AND `source`='?'", $data->identifier, $method);
+		$nick = trim ( $data->firstName . ' ' . $data->lastName );
+
 		if ($res->num_rows <= 0)
-		{					
+		{
 			if ($data->emailVerified)
 				$email = $data->emailVerified;
 			else if ($data->email)
@@ -188,11 +188,20 @@ class user extends model_base
 	
 	public static function socialProcessAvatar ($photoURL, $userID)
 	{
+		$avatar = array ( "small"=>"", "big"=>"" );
+
+		if ( !$photoURL )
+			return $avatar;
+
 		$imageProcessor = new image (200, 200);
 		$targetPath = CONTENT_PATH."/avatars";
 		$tmpname = tempnam ($targetPath.'/', $userID);
 		
 		$ch = curl_init ($photoURL);
+
+		if ( !$ch )
+			return $avatar;
+
 		$fp = fopen ($tmpname, "wb");
 		curl_setopt ($ch, CURLOPT_FILE, $fp);
 		curl_setopt ($ch, CURLOPT_HEADER, 0);
@@ -227,13 +236,15 @@ class user extends model_base
 	
 	public static function logout()
 	{
-		unset ($_SESSION["user"]);
-		$domain = system::param ("siteDomain");		 
-		setcookie ("id", '', time() - 3600*24*365, '/', $domain);
-		setcookie ("hash", '', time() - 3600*24*365, '/', $domain);		
+		if ( isset ( $_SESSION["user"] ) )
+			unset ( $_SESSION["user"] );
+
+		$domain = system::param ( "siteDomain" );		 
+		setcookie ( "id", '', -1, '/', $domain );
+		setcookie ( "hash", '', -1, '/', $domain );
 	}
 	
-	public static function processPasswordRequest ()
+	public static function processPasswordRequest()
 	{
 		system::checkFields (array ("email"=>"e-mail"));
 
@@ -269,8 +280,6 @@ class user extends model_base
 
 				return true;
 			}
-
-
 		}
 	}
 
@@ -308,5 +317,267 @@ class user extends model_base
 				system::redirect ('/', 5, "Ваш пароль успешно изменён.");
 			}
 		}
+	}
+
+	public static function mailInbox ( $offset = 1 )
+	{
+		$userID = intval ( $_SESSION["user"]["userID"] );
+
+		$_SESSION["user"]["mail"]["box"] = "inbox";
+
+		$cnt = self::$db->query ( "SELECT COUNT(*) as cnt FROM `messages` WHERE `receiverID`=?", $userID )->fetch();
+
+		self::$smarty->assign ( "totalMessagesCount", $cnt["cnt"] );
+
+		$limits = core::pagination ( $cnt["cnt"], $offset );
+
+		return self::$db->query ( "SELECT * FROM `messages` as m LEFT JOIN ".
+			"`users` as u ON u.`userID`=m.`senderID` WHERE m.`receiverID`=? ORDER BY m.`dt` DESC LIMIT " . 
+			implode ( ",", $limits ), $userID );
+	}
+
+	public static function mailOutbox ( $offset = 1 )
+	{
+		$userID = intval ( $_SESSION["user"]["userID"] );
+
+		$_SESSION["user"]["mail"]["box"] = "outbox";
+
+		$cnt = self::$db->query ( "SELECT COUNT(*) as cnt FROM `messages`,`users` WHERE `userID`=`senderID` AND `userID`=?", 
+				$userID )->fetch();
+
+		self::$smarty->assign ( "totalMessagesCount", $cnt["cnt"] );
+
+		$limits = core::pagination ( $cnt["cnt"], $offset );
+		
+		return self::$db->query ( "SELECT * FROM `messages` as m LEFT JOIN ".
+			"`users` as u ON u.`userID`=m.`receiverID` WHERE m.`senderID`=? ORDER BY m.`dt` DESC LIMIT " . 
+			implode ( ",", $limits ), $userID );
+	}
+
+	public static function sendUserMail ( array $receiverIDs, $senderID, $subject, $body )
+	{
+		if ( !$receiverIDs || !isset ( $_SESSION["user"] ) )
+			return false;
+
+		$receivers = array_map ( "intval", $receiverIDs );
+		$subject = htmlspecialchars ( $subject );
+		$body = htmlspecialchars ( $body );
+		$senderID = intval ( $senderID );
+
+		$isOk = true;
+		$emailDataIDs = array();
+		$senderMessagesIDs = array();
+		$messageID = 0;
+
+		for ( $i = 0; count ( $receivers ) > $i; ++$i )
+		{
+			if ( !self::$db->query ( "INSERT INTO `messages` (`senderID`,`nick`,`receiverID`,`body`,`subject`)".
+				" VALUES (?,'?',?,'?','?')", 
+				$senderID, $_SESSION["user"]["nick"], $receivers[$i], $body, $subject ) )
+			{
+				$isOk = false;
+				break;
+			} else {
+				$messageID = self::$db->insert_id();
+				$senderMessagesIDs[] = $messageID;
+				self::$smarty->clearCache ( null, "USER|USERMAIL|usermail_" . $receivers[$i] );
+			}
+		}
+
+		$emailDataRes = self::$db->query ( "SELECT * FROM `users` WHERE `userID` IN (" . implode ( ",", $receivers ) . ")" );
+
+		if ( $emailDataRes->getNumRows() )
+		{
+			$emailData = $emailDataRes->fetchAll();
+
+			foreach ( $emailData as $k => $v )
+			{
+				if ( !$v["email"] )
+				{
+					if ( $senderMessagesIDs )
+						array_shift ( $senderMessagesIDs );
+					
+					continue;
+				}
+
+				$messageID = 0;
+
+				if ( $senderMessagesIDs )
+					$messageID = array_shift ( $senderMessagesIDs );
+
+				$v["data"] = array ( "senderID"=>$senderID, "subject"=>$subject, "body"=>$body, 
+					"messageID"=>$messageID );
+
+				self::$mail->assign ( "mail", $v );
+				system::registerEvent ( "mail", "mailSendReport", $v["email"] );
+			}
+		}
+
+		self::$smarty->clearCache ( null, "USER|USERMAIL|usermail_$senderID" );
+
+		if ( !$isOk )
+			return false;
+
+		return true;
+	}
+
+	public static function deleteMailMessages ( array $messages = array(), $readed = 0 )
+	{
+		if ( !$messages )
+			return false;
+
+		$messages = array_map ( "intval", $messages );
+		
+		if ( $readed )
+		{
+			user::mailIndicator ( $readed, '-' );
+		}
+
+		return self::$db->query ( "DELETE FROM `messages` WHERE `messageID` IN (" . implode ( ",", $messages ).")" );
+	}
+
+	public static function markMails ( array $array = array() )
+	{
+		if ( !$array )
+			return false;
+
+
+		$yes = $no = array();
+		foreach ( $array as $k => $v )
+		{
+			if ( $v == "Y" )
+				$yes[] = $k;
+			else if ( $v == "N" )
+				$no[] = $k;
+		}
+
+		$ret = false;
+
+		if ( $yes )
+		{
+			user::mailIndicator ( $yes, '-' );
+			$ret = self::$db->query ( "UPDATE `messages` SET `isRead`='Y' WHERE `messageID` IN (" . implode ( ",", $yes ) . ")" );
+		}
+
+		if ( $no )
+		{
+			user::mailIndicator ( $no, '+' );
+			$ret = self::$db->query ( "UPDATE `messages` SET `isRead`='N' WHERE `messageID` IN (" . implode ( ",", $no ) . ")" );
+		}
+
+		return $ret;
+	}
+
+	public static function mailUserHistory ( $receiverID, $senderID )
+	{
+		$receiverID = intval ( $receiverID );
+		$senderID = intval ( $senderID );
+
+		// если понадобится cделать сложные перекрёстные выборки - не забыть про парные пересечения senderID и receiverID
+		return self::$db->query ( "SELECT *, DATE_FORMAT (`dt`, '%d.%m.%y') as dtFormated, " .
+		"`receiverID` as userID, `senderID` as userID FROM `messages` WHERE " . 
+		"(`receiverID`=$receiverID AND `senderID`=$senderID) OR (`senderID`=$receiverID AND `receiverID`=$senderID) " .
+		"ORDER BY `dt` DESC" );
+	}
+
+	public static function mailIndicator ( $val, $sign = '-' )
+	{
+		switch ( $sign ) 
+		{
+			case '+':
+				$_SESSION["user"]["mail"]["cnt"] += $val;
+			break;
+			
+			case '-':
+				$_SESSION["user"]["mail"]["cnt"] -= $val;
+
+				if ( $_SESSION["user"]["mail"]["cnt"] < 0 )
+					$_SESSION["user"]["mail"]["cnt"] = 0;
+
+			break;
+		}
+
+		$_SESSION["user"]["mail"]["tms"] = time();
+	}
+
+	public static function getMailMessage ( $messageID, $userID )
+	{
+		$mail = self::$db->query ( "SELECT *, m.`dt` as mdt FROM `messages` as m, `users` as u WHERE " .
+			"m.`messageID`=? AND IF (m.`senderID`=?, m.`receiverID`=u.`userID`, m.`senderID`=u.`userID`) " .
+			" LIMIT 1", $messageID, $userID );
+
+		if ( !$mail->getNumRows() )
+		{
+			return false;
+		}
+
+		$mdata = $mail->fetch();
+
+		if ( $mdata["receiverID"] != $userID && $mdata["senderID"] != $userID )
+		{
+			return false;
+		}
+
+		if ( isset ( $_POST["messageID"] ) && $_POST["messageID"] )
+		{
+			if ( !system::checkFields ( array ( "replyToMessage"=>"replyToMessage" ) ) )
+				return;
+
+			$messageID = intval ( $_POST["messageID"] );
+			$subject = "Без темы";
+			$recs = array();
+			$sendID = 0;
+				
+			if ( isset ( $_POST["subject"] ) && $_POST["subject"] )
+				$subject = htmlspecialchars ( $_POST["subject"] );
+
+			if ( !isset ( $_POST["receivers"] ) || !$_POST["receivers"] )
+			{
+				if ( $userID != $mdata["senderID"] )
+				{
+					$recs[] = $mdata["senderID"];
+					$subject = "RE: " . $mdata["subject"];
+				} else {
+					$recs[] = $mdata["receiverID"];
+				}
+			}
+
+			if ( user::sendUserMail ( $recs, $userID, $subject, $_POST["replyToMessage"] ) )
+			{
+				self::$smarty->clearCache ( null, "USER|USERMAIL|usermail_$userID" );
+				self::$smarty->clearCache ( null, "USER|USERMAIL|usermail_" . $message["receiverID"] );
+				return system::redirect ( "/user/mail" );
+			}
+		}
+
+		if ( $userID != $mdata["senderID"] && $mdata["isRead"] == "N" )
+		{
+			self::$smarty->clearCache ( null, "USER|USERMAIL|usermail_$userID|usermessage_$messageID" );
+			self::$smarty->clearCache ( null, "USER|USERMAIL|usermail_$userID" );
+			self::$smarty->clearCache ( null, "USER|USERMAIL|usermail_" . $mdata["receiverID"] );
+			
+			self::$db->query ( "UPDATE `messages` SET `isRead`='Y' WHERE `messageID`=?", $messageID );
+
+			if ( $_SESSION["user"]["mail"]["cnt"] )
+			{
+				user::mailIndicator ( 1, '-' );
+			}
+		}
+
+		return $mdata;
+	}
+
+	public static function buildUserIDArray ( array &$array )
+	{
+		if ( !$array )
+			return $array;
+
+		$tmp = array();
+		foreach ( $array as $k => $v )
+		{
+			$tmp [ $v["userID"] ] = $v;
+		}
+		
+		return $tmp;
 	}
 }

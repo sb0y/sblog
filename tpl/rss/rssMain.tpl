@@ -7,28 +7,28 @@
 	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
 >
 <channel>
-<title>sb0y[AT]home</title>
+<title>9000 Games</title>
 <link>{$urlBase}</link>
-<description>Уютный бложик девелопера.</description>
+<description>RSS лента новостного сайта 9000 Games</description>
 <language>ru</language>
 <pubDate>{$smarty.now|date_format:"r"}</pubDate>
 
 <docs>http://blogs.law.harvard.edu/tech/rss</docs>
 <generator>{$urlBase}/</generator>
-<managingEditor>sb0y@bagrincev.ru</managingEditor>
-<webMaster>sb0y@bagrincev.ru</webMaster>
+<managingEditor>hostmaster@9kg.me</managingEditor>
+<webMaster>hostmaster@9kg.me</webMaster>
 
 {foreach $items as $key=>$item}
 <item>
 	<title>{$item.title}</title>
-	<link>{$urlBase}blog/{$item.slug}/</link>
+	<link>{$urlBase}news/{$item.slug}/</link>
 	<description>{$item.short|strip_tags:false|replace:"\r\n":''|replace:"\n":''}</description>
 	<content:encoded><![CDATA[[{$item.body}]]></content:encoded>
 	<pubDate>{$item.tms|date_format:"r"}</pubDate>
-	{*<dc:creator>'.$creator.'</dc:creator>*}
+	<dc:creator>{$item.author}</dc:creator>
 	{foreach $item.cats as $k=>$v}<category><![CDATA[{$v.catName}]]></category>{/foreach}
-	<comments>{$urlBase}blog/{$item.slug}</comments>
-	<guid isPermaLink="false">{$urlBase}blog/{$item.slug}</guid>
+	<comments>{$urlBase}news/{$item.slug}</comments>
+	<guid isPermaLink="false">{$urlBase}news/{$item.slug}</guid>
 </item>
 {/foreach}
 

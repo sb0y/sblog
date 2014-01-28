@@ -9,21 +9,23 @@ $configuration = array (
 	),
 	
 	"db" => array (
-		"database" => "database",
-		"user" => "user",
-		"password" => "secret", 
+		"database" => "9kg",
+		"user" => "9kg",
+		"password" => "windows", 
 		"connect_host" => "localhost",
 		"codepage" => "utf8"
 	),
 
-	"siteDomain" => "bagrintsev.me",
-
-	"mail" => array(
+	"mail" => array (
 		"codepage" => "UTF-8",
-		"fromEmail" => "noreply@bagrintsev.me",
-		"fromTitle" => "noreply@bagrintsev.me",
+		"fromEmail" => "noreply@9kg.me",
+		"fromTitle" => "noreply@9kg.me",
 		"contentType" => "text/html"
 	),
 
-	"test" => "test"
+	"settings" => array (
+		"itemsOnPage" => 10,
+		"optimizeHTML" => false,
+		"siteDomain" => "dev.9kg.me"
+	)
 );

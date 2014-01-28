@@ -27,9 +27,11 @@
 	//~ define ('URL_BASE', $base_url);
 //~ }
 
-define ("ENGINE_PATH", ROOT_PATH."/engine");
-define ("LIB_PATH", ENGINE_PATH."/libs");
-define ("CORE_PATH", ENGINE_PATH."/core");
+define ( "ENGINE_PATH", ROOT_PATH."/engine" );
+define ( "LIB_PATH", ENGINE_PATH."/libs" );
+define ( "CORE_PATH", ENGINE_PATH."/core" );
+define ( "MODULES_PATH", ENGINE_PATH."/modules" );
+define ( "PLUGIN_PATH", ENGINE_PATH."/plugins" );
 
 if (defined ("CORE_EXTERNAL_INIT"))
 {
@@ -49,42 +51,47 @@ define ("CONTENT_PATH", ROOT_PATH."/content" );
 
 define ("TMP_PATH", ROOT_PATH."/tmp" );
 
-
 error_reporting(E_ALL); ini_set('display_errors', 1);
 
-date_default_timezone_set ("Europe/Moscow");
-setlocale (LC_ALL, "ru_RU.UTF-8");
+date_default_timezone_set ( "Europe/Moscow" );
+setlocale ( LC_ALL, "ru_RU.UTF-8" );
+ini_set ( "default_charset", "UTF-8" );
 
-session_start();
-
-function engine_autoload ($class_name)
+function engine_autoload ( $class_name )
 {	
-	if ($class_name == "Smarty")
+	if ( $class_name == "Smarty" || $class_name == "Smarty_Internal_Resource_Extends" )
 		return false;
 	
-		
 	$filename = 'class.'.$class_name.'.php';
 
-	$paths = array(
-	LIB_PATH.'/'.$filename,
-	LIB_PATH.'/'.$class_name.'/'.$filename,
-	MDL_PATH."/model.$class_name.php",
-	CORE_PATH.'/'.$filename);
+	$paths = array (
+		MDL_PATH."/model.$class_name.php",
+		LIB_PATH.'/'.$filename,
+		LIB_PATH.'/'.$class_name.'/'.$filename,
+		CORE_PATH.'/'.$filename
+	);
 
-	foreach ($paths as $p)
+	// because external initialized instances also need systems models
+	if ( defined ( "CORE_EXTERNAL_INIT" ) )
 	{
-		if (file_exists ($p))
+		$paths[] = ENGINE_PATH . "/models/model.$class_name.php";
+	}
+
+	foreach ( $paths as $p )
+	{
+		if ( file_exists ( $p ) )
 		{
 			$file = $p;
 			break;
 		}
 	}
-	if (!isset($file))
+
+	if ( !isset ( $file ) )
 	{
 		return false;
 	}
 
-	include ($file);
+	include_once ( $file );
 }
 
 spl_autoload_register ("engine_autoload");

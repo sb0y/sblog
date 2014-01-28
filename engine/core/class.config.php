@@ -30,11 +30,11 @@ class config extends core
 
 	private function processSection ($keyName, $sectionArray)
 	{
-		$test;
+		$test = "";
 
 		foreach ($sectionArray as $sectionName => $value)
 		{
-			$test = $this->core->$keyName;
+			$test = isset ( $this->core->$keyName ) ? $this->core->$keyName : "";
 
 			if (is_array ($value))
 			{
@@ -42,7 +42,7 @@ class config extends core
 				continue;
 			}
 
-			if (method_exists ($this->core->$keyName, $sectionName) )
+			if (method_exists ($test, $sectionName) )
 			{
 				$test->$sectionName ($value);
 				continue;
@@ -56,7 +56,7 @@ class config extends core
 
 			$test = isset ($this->core->$keyName->$sectionName) ? $this->core->$keyName->$sectionName : null;
 
- 			if (isset ($test)) 
+ 			if ( $test ) 
  			{
 				$this->core->$keyName->$sectionName = $value;
 			} else {

@@ -40,37 +40,46 @@ class controller_blog extends controller_base
 
 		if (!empty ($_POST["slug"]))
 		{
-			$_POST["slug"] = blog::handlePostName ($_POST["slug"]);
+			$fill["slug"] = core::generateSlug ( $_POST["slug"] );
 
-		} else if (!empty ($_POST["title"])) {
+		} else if ( !empty ( $_POST["title"] ) ) {
 
-			$_POST["slug"] = blog::handlePostName ($_POST["title"]);
+			$fill["slug"] = core::generateSlug ( $_POST["title"] );
 		}
 
 		if (isset ($_GET["draftID"]) || isset ($_GET["draftName"]))
 		{
-			$draftCall = isset ($_GET["draftID"]) ? intval ($_GET["draftID"]) : $_GET["draftName"];
+			$draftCall = isset ($_GET["draftID"]) ? intval ( $_GET["draftID"] ) : $_GET["draftName"];
 			$fill = blog::loadDraft ($draftCall);
 		} else {
 
-			$fill = $_POST;
+			$fill += $_POST;
 		}
 
-		if (isset ($_POST["picRealUpload"]))
+		if ( isset ( $_POST["picRealUpload"] ) )
 		{
-			$uploadedPics = blog::uploadOnePicture ($_POST["slug"]);
+            $uploadedPics = blog::uploadOnePicture ( $fill["slug"] );
+		}
+
+		$fill["poster"] = "";
+		if ( isset ( $_FILES["poster"] ) && $_FILES["poster"]["error"] == 0 )
+		{
+			$uploadedPics = blog::uploadOnePicture ( $fill["slug"], "posterImages" );
+
+			if ( isset ( $uploadedPics["poster"] ) && $uploadedPics["poster"] )
+				$fill["poster"] = serialize ( $uploadedPics["poster"] );
 		}
 
 		if (isset ($_POST["savePost"]))
 		{
-			$savedPost = blog::writePost ($_POST);
+			$savedPost = blog::writePost ( $fill );
 			if ($savedPost)
 				$doRedirect = true;
 		}
 
-		blog::showAttachedPics ($fill);
+		blog::showAttachedPics ( $fill );
 		
-		$this->smarty->assign ("fill", $fill);
+		$this->smarty->assign ( "fill", $fill );
 		
 		if ($doRedirect)
 			system::redirect (system::param ("urlBase")."posts");
@@ -78,10 +87,13 @@ class controller_blog extends controller_base
 	
 	function addNewCat()
 	{
-		echo blog::addNewCat();
+		$res = blog::addNewCat();
+
+		if ( $res !== false )
+			echo "Ok|" . $res;
 	}
 
-	function requestModels (&$modelsNeeded)
+	function requestModels ( &$modelsNeeded )
 	{
 		$modelsNeeded = array();
 	}
@@ -90,44 +102,57 @@ class controller_blog extends controller_base
 	{
 		system::setParam ("page", "posts");
 		//$this->smarty->setCacheID ("MAINPAGE");
-		blog::buildList ("content");
+		blog::buildList ("content", "news");
     }
 
 	function editPost()
 	{
-		$id = intval ($_GET["contentID"]);
+		$id = intval ( $_GET["contentID"] );
+
+		if ( !$id )
+			return false;
+
 		$doRedirect = false;
 
-		if (isset ($_POST["savePost"]))
+		$fill = $_POST;
+
+		if ( isset ( $_POST["slug"] ) && $_POST["slug"] )
+			$fill["slug"] = core::generateSlug ( $_POST["slug"] );
+
+		if ( isset ( $_POST["uploadPicture"] ) )
 		{
-			blog::updatePost ($id, $_POST);
-			$doRedirect = true;
+			$uploadedPics = blog::uploadOnePicture ( $fill["slug"] );
 		}
 
-		if (isset ($_POST["uploadPicture"]))
+		$fill["poster"] = "";
+		if ( isset ( $_FILES["poster"] ) && $_FILES["poster"]["error"] == 0 )
 		{
-			$uploadedPics = blog::uploadOnePicture ($_POST["slug"]);
+			$uploadedPics = blog::uploadOnePicture ( $fill["slug"], "posterImages" );
+
+			if ( isset ( $uploadedPics["poster"] ) && $uploadedPics["poster"] )
+				$fill["poster"] = serialize ( $uploadedPics["poster"] );
 		}
 
-		blog::getAllCats ($id);
+		if ( isset ($_POST["savePost"]) )
+		{
+			if ( blog::updatePost ( $id, $fill ) )
+				$doRedirect = true;
+		}
+
+		blog::getAllCats ( $id );
 		system::setParam ("page", "editPost");
-		$sqlData = blog::buildForm ("content", "AND `contentID`=$id");
+		$sqlData = blog::buildForm ("content", array ( "AND `contentID`=$id" ) );
 				
-		blog::showAttachedPics ($sqlData);
-	
-		$this->smarty->clearCache (null, "MAINPAGE");
-        $this->smarty->clearCache (null, "SEARCH_RES");
-        $this->smarty->clearCache (null, "RSS");
-        $this->smarty->clearCache (null, $sqlData["slug"]);
-    
-        if ($doRedirect)
+		blog::showAttachedPics ( $sqlData );
+
+		if ($doRedirect)
 			system::redirect (system::param ("urlBase")."posts");
 	}
 
 	function postsWithComments()
 	{
 		system::setParam ("page", "posts");
-		blog::buildList ("content", "AND `comments_count`!=0");
+		blog::buildList ("content", "news", array ( "`comments_count`!=0" ) );
 	}
 
 	function showPostComments()
@@ -135,7 +160,7 @@ class controller_blog extends controller_base
 		$id = intval ($this->args[1]);
 		$this->smarty->assign ("contentID", $id);
 		system::setParam ("page", "commentsList");
-		blog::buildList ("comments", "AND `contentID`=$id");
+		blog::buildList ("comments", "news", array ( "`contentID`=$id" ) );
 	}
 
 	function resolveUrlById()
@@ -162,6 +187,7 @@ class controller_blog extends controller_base
 	function editComment()
 	{
 		$id = intval ($_GET["commentID"]);
+		system::setParam ("page", "editComment");
 
 		if (!empty ($_POST))
 		{
@@ -169,13 +195,12 @@ class controller_blog extends controller_base
 		}
 
 		blog::buildForm ("comments", "AND `commentID`=$id");
-		system::setParam ("page", "editComment");
 	}
 
 	function categories()
 	{
-		system::setParam ("page", "categories");
-		blog::buildList ("categories");
+		system::setParam ( "page", "categories" );
+		blog::buildList ( "categories", "news" );
 	}
 
 	function editCategory()
@@ -190,7 +215,7 @@ class controller_blog extends controller_base
 			blog::updateCategory ($id, $_POST);
 		}
 
-		blog::buildForm ("categories", "AND `categoryID`=$id");
+		blog::buildForm ("categories", "categoryID`=$id");
 	}
 
 	function addCat()
@@ -198,6 +223,9 @@ class controller_blog extends controller_base
 		system::setParam ("page", "addCat");
 
 		if (!empty ($_POST))
-			blog::addCat ($_POST);
+		{
+			if ( blog::addCat ($_POST) )
+				system::redirect ( "/adm/blog/categories" );
+		}
 	}
 }

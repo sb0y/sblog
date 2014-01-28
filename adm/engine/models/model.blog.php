@@ -29,15 +29,8 @@ class blog extends model_base
 		
 	}
 	
-	public static function writePost ($post)
-	{
-		unset ($post["savePost"]);
-
-		if (self::postExist ("slug", $post["slug"]))
-		{
-			system::registerEvent ("error", "slug", "Такой адрес поста уже занят", "URL");
-		}
-		
+	public static function checkPostErrors ( $post )
+	{	
 		if (empty ($post["title"]))
 		{
 			system::registerEvent ("error", "title", "Заголовок не может быть пустым", "Заголовок поста");
@@ -47,11 +40,42 @@ class blog extends model_base
 		{
 			system::registerEvent ("error", "categories", "Необходимо выбрать категорию(ии)", "Категории");
 		}
-				
+
+		if (empty ($post["short"]))
+		{
+			system::registerEvent ("error", "short", "У новости должен быть анонос текста", "Анонс текста");
+		}
+
+		if ( isset ( $post["short"] ) && mb_strlen ( $post["short"] ) > 140 )
+		{
+			system::registerEvent ("error", "short", "Количество символов в анонсе текста превышет 140 символов.", "Анонс текста слишком длинный");
+		}
+
 		if (system::checkErrors())
 		{
 			return false;
 		}
+
+		return true;
+	}
+
+	public static function writePost ( $post, $type = "news" )
+	{
+		if (self::postExist ("slug", $post["slug"]))
+		{
+			system::registerEvent ("error", "slug", "Такой адрес поста уже занят", "URL");
+		}
+
+		if ( !self::checkPostErrors ( $post ) )
+		{
+			return false;
+		}
+
+		unset ($post["savePost"]);
+
+		$post["author"] = $_SESSION["user"]["nick"];
+		$post["userID"] = $_SESSION["user"]["userID"];
+		$post["type"] = $type;
 
 		if (isset ($post["catName"]))
 		{
@@ -81,6 +105,7 @@ class blog extends model_base
 					$v = "STR_TO_DATE ('$v', '%d-%m-%Y')";
 				break;
 
+				case "short":
 				case "body":
 	 				$v = "'".str_replace ("\n", "<br />", $v)."'";
 				break;
@@ -91,59 +116,47 @@ class blog extends model_base
 						$v = "'$v'"; 
 			}
 
-
 			$content[$k] = "`$k`=$v";
 		}
 
-		$short = preg_split ("/<!--\s*more\s*-->/i", $post["body"]);
+		$short = preg_split ( "/(?:&lt;|<)!--\s*more\s*--(?:&gt;|>)+/i", $post["body"] );
 
-		if (count ($short) > 1)
+		if ( is_array ( $short ) && count ( $short ) > 1 )
 		{
-			$content["short"] = "`short`='".self::$db->escapeString (nl2br ($short[0]))."'";
+			$content["short"] = "`short`='" . self::$db->escapeString ( nl2br ( array_shift ( $short ) ) ) . "'";
 		}
 
 		//print_r ($_POST);
 		//echo "INSERT INTO `content` SET ".implode (", ", $content);
-		self::$db->query ("INSERT INTO `content` SET ".implode (", ", $content));
+		self::$db->query ( "INSERT INTO `content` SET " . implode ( ", ", $content ) );
 		$id = self::$db->insert_id();
-		
 		self::handleCats ($cats, $id);
-		
+		self::$smarty->clearCache (null, "MAINPAGE|SEARCH_RES|BLOG|CATSELECT|RSS");
 		self::$smarty->clearCache (null, "MAINPAGE");
-		self::$smarty->clearCache (null, "SEARCH_RES");
-		self::$smarty->clearCache (null, "RSS");
 		
 		return $content;
 	}
 
 	public static function handlePostName ($str)
 	{
-		static $tbl;
-
-		if (!is_array($tbl))
-		{
-			$tbl = array (
-				'а'=>'a', 'б'=>'b', 'в'=>'v', 'г'=>'g', 'д'=>'d', 'е'=>'e', 'ж'=>'g', 'з'=>'z',
-				'и'=>'i', 'й'=>'y', 'к'=>'k', 'л'=>'l', 'м'=>'m', 'н'=>'n', 'о'=>'o', 'п'=>'p',
-				'р'=>'r', 'с'=>'s', 'т'=>'t', 'у'=>'u', 'ф'=>'f', 'ы'=>'i', 'э'=>'e', 'А'=>'A',
-				'Б'=>'B', 'В'=>'V', 'Г'=>'G', 'Д'=>'D', 'Е'=>'E', 'Ж'=>'G', 'З'=>'Z', 'И'=>'I',
-				'Й'=>'Y', 'К'=>'K', 'Л'=>'L', 'М'=>'M', 'Н'=>'N', 'О'=>'O', 'П'=>'P', 'Р'=>'R',
-				'С'=>'S', 'Т'=>'T', 'У'=>'U', 'Ф'=>'F', 'Ы'=>'I', 'Э'=>'E', 'ё'=>"yo", 'х'=>"h",
-				'ц'=>"ts", 'ч'=>"ch", 'ш'=>"sh", 'щ'=>"shch", 'ъ'=>"", 'ь'=>"", 'ю'=>"yu", 'я'=>"ya",
-				'Ё'=>"YO", 'Х'=>"H", 'Ц'=>"TS", 'Ч'=>"CH", 'Ш'=>"SH", 'Щ'=>"SHCH", 'Ъ'=>"", 'Ь'=>"",
-				'Ю'=>"YU", 'Я'=>"YA"
-			);
-		}
-
-		$str = strtr ($str, $tbl);
-		$str = strtolower ($str);
-		$str = preg_replace (array ('/[\s-:]{1,}/i', '/(.*)->/'), array('-', ''), $str);
-
-		return $str;
+		return core::generateSlug ( $str );
 	}
 
-	public static function buildList ($target, $clause='')
+	public static function buildList ( $target, $type="", array $clause=array() )
 	{
+		if ( $type )
+			if ( $target == "categories" ) // временный костыль
+				$clause[] = "`catType`='$type'";
+			else $clause[] = "`type`='$type'";
+
+		$clauseSTR = "";
+
+		if ( $clause )
+			$clauseSTR = implode ( " AND ", $clause );
+
+		if ( $clauseSTR )
+			$clauseSTR = "WHERE $clauseSTR";
+
 		$columns = self::$db->query ("SHOW COLUMNS FROM `$target`")->fetchAll();
 
 		if (isset ($_GET["action"]))
@@ -157,12 +170,10 @@ class blog extends model_base
 
 					self::$db->query ("DELETE FROM `$target` WHERE `?`=?", $keyName, $id);
 
-					if ($target=="content")
+					if ( $target == "content" )
 					{
 						self::$db->query ("DELETE FROM `content_category` WHERE `id`=?", $id);
-						self::$smarty->clearCache (null, "MAINPAGE");
-						self::$smarty->clearCache (null, "RSS");
-						self::$smarty->clearCache (null, "SEARCH_RES");
+						self::$smarty->clearCache (null, "MAINPAGE|SEARCH_RES|BLOG|CATSELECT|RSS");
 					}
 				break;
 			}
@@ -174,7 +185,7 @@ class blog extends model_base
 
 		$mysqlLimits = array();
 		$offset = 0;
-		$allCount = self::$db->query ("SELECT COUNT(*) as cnt FROM `$target` WHERE 1 ".$clause)->fetch();
+		$allCount = self::$db->query ("SELECT COUNT(*) as cnt FROM `$target` $clauseSTR")->fetch();
         $pageCompose = new pagination ($allCount["cnt"]);
 		$sort = $columns[0]["Field"];
 		$direction = "DESC";
@@ -188,16 +199,16 @@ class blog extends model_base
 		{
 			if ($_GET["direction"] == "DESC")
 				$direction = "ASC";
-			else if (($_GET["direction"] == "ASC"))
+			else if ( $_GET["direction"] == "ASC" )
 				$direction = "DESC";
 		}
 
-		if (isset ($_GET["sort"]) && $_GET["sort"])
+		if ( isset ( $_GET["sort"] ) && $_GET["sort"] )
 		{
 			$sort = $_GET["sort"];
 		}
 
-		$pageCompose->readInputData ($offset, 20);
+		$pageCompose->readInputData ( $offset, 20 );
 		$mysqlLimits = $pageCompose->calculateOffset();
 		$pages = $pageCompose->genPages();
 		self::$smarty->assign ("pages", $pages);
@@ -205,7 +216,8 @@ class blog extends model_base
 		self::$smarty->assign ("sort", $sort);
 		self::$smarty->assign ("allCount", $allCount["cnt"]);
 
-		$sqlData = self::$db->query ("SELECT * FROM `$target` WHERE 1 $clause ORDER BY `$sort` $direction LIMIT {$mysqlLimits["start"]},{$mysqlLimits["end"]}")->fetchAll();	
+		$sqlData = self::$db->query ("SELECT * FROM `$target` $clauseSTR ORDER BY `$sort` $direction LIMIT 
+			{$mysqlLimits["start"]},{$mysqlLimits["end"]}")->fetchAll();	
 		
 		self::$smarty->assign ("list", $sqlData);
 
@@ -215,8 +227,8 @@ class blog extends model_base
 	public static function buildForm ($target)
 	{
 		$id = array_keys ($_GET);
-		$keyName = $id [count ($_GET)-1];
-		$id = intval ($_GET [$keyName]);
+		$keyName = $id [ count ($_GET) - 1 ];
+		$id = intval ( $_GET [ $keyName ] );
 		
 		$sqlData = self::$db->query ("SELECT * FROM `$target` WHERE `$keyName`=$id LIMIT 1")->fetch();
 
@@ -233,28 +245,29 @@ class blog extends model_base
 			$catHave = ", (SELECT COUNT(*) FROM `content_category` WHERE `contentID`=$contentID AND `catID`=cID) as catSel";
 		}
 
-		$sqlData = self::$db->query ("SELECT *, `categoryID` as cID$catHave FROM `categories`")->fetchAll();
+		$sqlData = self::$db->query ("SELECT *, `categoryID` as cID$catHave FROM `categories` WHERE `catType`='news'")->fetchAll();
 		self::$smarty->assign ("cats", $sqlData);
 	}
 
-	public static function addNewCat()
+	public static function addNewCat ( $type = "news" )
 	{
 		system::$display = false;
 		
-		if (isset ($_POST["catName"]))
+		if ( isset ( $_POST["catName"] ) )
 		{
-			$catName = htmlspecialchars ($_POST["catName"]);
+			$catName = htmlspecialchars ( $_POST["catName"] );
 
-			if (!isset ($_POST["catSlug"]))
+			if ( isset ( $_POST["catSlug"] ) && $_POST["catSlug"] )
 			{
-				$catSlug = self::handlePostName($_POST["catName"]);
+				$catSlug = core::generateSlug ( $_POST["catSlug"] );
 			} else {
-				$catSlug = htmlspecialchars (self::handlePostName($_POST["catSlug"]));
+				$catSlug = core::generateSlug ( $_POST["catName"] );
 			}
 
-			self::$db->query ("INSERT INTO `categories` SET `categoryID`='',`catName`='?', catSlug='?'", $catName, $catSlug);
+			self::$db->query ( "INSERT INTO `categories` SET `catName`='?', catSlug='?', catType='?'", 
+				$catName, $catSlug, $type );
 
-			return "Ok|".self::$db->insert_id();
+			return self::$db->insert_id();
 		}
 
 		return false;
@@ -280,27 +293,38 @@ class blog extends model_base
 
 	public static function updatePost ($id, $data)
 	{
-        if (isset ($data["savePost"]))
+		if ( !self::checkPostErrors ( $data ) )
+		{
+			return false;
+		}
+
+        if ( isset ($data["savePost"]) )
 			unset ($data["savePost"]);
 			
-		if (isset ($data["picWidth"]))
+		if ( isset ($data["picWidth"]) )
 			unset ($data["picWidth"]);
 			
-		if (isset ($data["picHeigth"]))
+		if ( isset ($data["picHeigth"]) )
 			unset ($data["picHeigth"]);
 		
-		self::handleCats ($data["categories"], $id);
+		self::handleCats ( $data["categories"], $id );
 
-		if (!isset ($data["showOnSite"]))
+		if ( !isset ($data["showOnSite"]) )
 		{
 			$data["showOnSite"] = 'N';
 		}
 		
-		$data["short"] = preg_split ("/<!--\s*more\s*-->/i", $data["body"]);
-		
-		if (count ($data["short"]) > 1)
+		if ( empty ( $data["short"] ) )
 		{
-			$data["short"] = $data["short"][0];
+			$data["short"] = preg_split ( "/(?:&lt;|<)!--\s*more\s*--(?:&gt;|>)+/i", $data["body"] );
+
+			if ( is_array ( $data["short"] ) )
+			{
+				$data["short"] = array_shift ( $data["short"] );
+			}
+
+		} else {
+			$data["short"] = nl2br ( $data["short"] );
 		}
 
 		if (isset ($data["catName"]))
@@ -311,21 +335,35 @@ class blog extends model_base
 
 		if (!empty ($data["slug"]))
 		{
-			$data["slug"] = self::handlePostName ($data["slug"]);
+			$data["slug"] = core::generateSlug ( $data["slug"] );
 
-		} else if (!empty ($data["title"])) {
+		} else if ( !empty ($data["title"] ) ) {
 
-			$data["slug"] = self::handlePostName ($data["title"]);
+			$data["slug"] = core::generateSlug ( $data["title"] );
 		}
 
 		//self::$db->updateTable ("content", $data, "contentID", $id);
-				
-		self::$db->query ("UPDATE `content` SET `dt`=STR_TO_DATE ('?', '%d-%m-%Y'), `title`='?', slug='?', `body`='?', `short`='?',
-			`showOnSite`='?' WHERE `contentID`=?", $data["dt"], $data["title"], $data["slug"], $data["body"], $data["short"], 
-			$data["showOnSite"], $id);
+		
+		if ( $data["poster"] )
+		{
+			return self::$db->query ( "UPDATE `content` SET `dt`=STR_TO_DATE ('?', '%d-%m-%Y'), `title`='?', slug='?', `body`='?', `short`='?',
+				`showOnSite`='?', `editedByID`=?, `editedByNick`='?', `editedOn`=NOW(), `poster`='?' WHERE `contentID`=?", 
+				$data["dt"], $data["title"], $data["slug"], $data["body"], $data["short"], $data["showOnSite"], 
+				$_SESSION["user"]["userID"], $_SESSION["user"]["nick"], $data["poster"], $id );
+		} else {
+			return self::$db->query ( "UPDATE `content` SET `dt`=STR_TO_DATE ('?', '%d-%m-%Y'), `title`='?', slug='?', `body`='?', `short`='?',
+				`showOnSite`='?', `editedByID`=?, `editedByNick`='?', `editedOn`=NOW() WHERE `contentID`=?", 
+				$data["dt"], $data["title"], $data["slug"], $data["body"], $data["short"], $data["showOnSite"], 
+				$_SESSION["user"]["userID"], $_SESSION["user"]["nick"], $id );
+		}
+
+		self::$smarty->clearCache ( null, "MAINPAGE|SEARCH_RES|BLOG|CATSELECT|RSS|{$data["slug"]}" );
+		self::$smarty->clearCache ( null, "MAINPAGE" );
+		self::$smarty->clearCache ( null, $data["slug"] );
+
 	}
 
-	public static function updateComment ($commentID)
+	public static function updateComment ( $commentID )
 	{
 		self::$db->updateTable ("comments", $_POST, "commentID", $commentID);
 		$contentID = intval ($_GET["contentID"]);
@@ -334,39 +372,45 @@ class blog extends model_base
 
 	public static function saveDraft()
 	{
-		self::$db->query ("INSERT INTO `drafts` SET `contentID`=0, `userID`=?, `title`='?', `slug`='?', `body`='?', ".
+		self::$db->query ( "INSERT INTO `drafts` SET `contentID`=0, `userID`=?, `title`='?', `slug`='?', `body`='?', ".
 			"`dt`=STR_TO_DATE ('?', '%d-%m-%Y'), `draft_add_date`=NOW()", 
-			$_SESSION["user"]["userID"], $_POST["title"], $_POST["slug"], $_POST["body"], $_POST["dt"]);
+			$_SESSION["user"]["userID"], $_POST["title"], $_POST["slug"], $_POST["body"], $_POST["dt"] );
 	}
 
 	public static function uploadOnePicture ($postName, $postDir="postImages")
 	{
-		if (!empty ($_POST["picWidth"]))
-			$width = intval ($_POST["picWidth"]);
+		if ( !empty ( $_POST["picWidth"] ) )
+			$width = intval ( $_POST["picWidth"] );
 		else $width = 200;
 
-		if (!empty ($_POST["picHeight"]))
-			$heigth = intval ($_POST["picHeight"]);
+		if (! empty ( $_POST["picHeight"] ) )
+			$heigth = intval ( $_POST["picHeight"] );
 		else $heigth = 200;
 
 		$path = CONTENT_PATH."/$postDir/$postName/";
 
-		if (!is_dir ($path) || system::dirIsEmpty ($path))
+		if ( !is_dir ( $path ) || system::dirIsEmpty ( $path ) )
 		{
 			//blog::saveDraft();
 
-			if (!is_dir ($path))
-				mkdir ($path, 0777, true);
+			if ( !is_dir ( $path ) )
+				mkdir ( $path, 0777, true );
 		}
 
-		$imageProcessor = new image ($width, $heigth);
-		$expectedPics = array ("picUpld"=>$path.time());
-        $imageProcessor->handleAllUploads ($expectedPics);
+		$imageProcessor = new image ( $width, $heigth );
 
-        return $expectedPics["picUpld"];
+		if ( $postDir == "posterImages" )
+		{
+			$imageProcessor->additionalProcessing ( "poster", 640, 0 );
+		}
+
+		$expectedPics = array ( "picUpld" => $path.time(), "poster" => $path.$postName );
+        $imageProcessor->handleAllUploads ( $expectedPics );
+
+        return $expectedPics;
 	}
 
-	public static function loadDraft ($call)
+	public static function loadDraft ( $call )
 	{
 		if (is_numeric ($call))
 		{
@@ -400,10 +444,15 @@ class blog extends model_base
 		system::redirect (system::param ("urlBase")."categories");
 	}
 
-	public static function addCat ($data)
+	public static function addCat ( $data, $type = "news" )
 	{
-		self::$db->query ("INSERT INTO `categories` SET `catName`='?', `catSlug`='?'", $data["catName"], $data["catSlug"]);
-		system::redirect ("/adm/blog/categories");
+		if ( !isset ( $data["catSlug"] ) || !$data["catSlug"] )
+		{
+			$data["catSlug"] = core::generateSlug ( $data["catName"] );
+		}
+
+		return self::$db->query ("INSERT INTO `categories` SET `catName`='?', `catSlug`='?', `catType`='$type'", 
+				$data["catName"], $data["catSlug"]);
 	}
 	
 	public static function showAttachedPics ($fill, $picsDir="postImages")
@@ -455,7 +504,7 @@ class blog extends model_base
 				}
 			}
 		}
-		
+
 		self::$smarty->assign ("picFiles", $picFiles);
 	}
 }

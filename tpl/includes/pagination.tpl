@@ -1,10 +1,7 @@
-{assign "pagBase" "blog"}
-{if isset ($pages)}
+{if isset ($pages) && $pages}
 <div class="pagination">
-<ul>
 {foreach $pages as $key => $value}
-<li><span class="page-numbers{if $value.options} {$value.options}{/if}"><a href="{$urlBase}{$pagBase}/offset/{$value.value}">{$value.value}</a></span></li>
+<a class="page-numbers page{if $value.options} {$value.options}{/if}" href="{$urlBase}{$routePath|regex_replace:"/\/offset\/[0-9\/]*.*/":""}/offset/{$value.value}{if isset ($smarty.get.text)}?text={$smarty.get.text}{/if}">{$value.value}</a>
 {/foreach}
-</ul>
 </div>
 {/if}

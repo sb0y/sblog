@@ -17,36 +17,39 @@ class system
 	public static $errors = array();
 	public static $wasErrors = false;
 	public static $emails = array();
+	public static $frontController = "frontend";
 	
-	public static function init ($engine="frontend")
+	public static function init ( $engine = "frontend" )
 	{
-		switch ($engine)
+		switch ( $engine )
 		{
-			case "frontend":
-
-			//break;
-			
+			case "script":
+				self::$frontController = "script";
+				self::$core = new core;
+				self::$core->initDB();
+				self::$core->initMail();
+			break;
 			case "backend":
-				
-			//break;
-			default:
-				$core = new router;
-				self::$core =& $core;
+				self::$frontController = "backend";
+			case "frontend":		
+				self::$core = new router;
 				self::$core->init();
 		}
+
+		return self::$core;
 	}
 	
 	public static function registerEvent (/*$type, $fullName, $txt, $outName=''*/)
 	{
 		$args = func_get_args();
-		$type = array_shift ($args);
+		$type = array_shift ( $args );
 				
-		switch ($type)
+		switch ( $type )
 		{
 			case "error":
 				self::$wasErrors = true;
-				$fullName = array_shift ($args);
-				self::$errors[$fullName] = array ("fullName"=>$fullName, "txt"=>array_shift ($args), "outName"=>array_shift ($args));
+				$fullName = array_shift ( $args );
+				self::$errors [ $fullName ] = array ( "fullName" => $fullName, "txt" => array_shift ( $args ), "outName" => array_shift ( $args ) );
 			break;
 			case "mail":
 				$tmp = array();
@@ -95,13 +98,14 @@ class system
 	
 	public static function log ($logLevel, $message)
 	{
-		
+		// пока так
+		echo $message . "<br />\n";
 	}
 	
-	public static function redirect ($url, $delay = false, $txt = false)
+	public static function redirect ( $url, $delay = false, $txt = false )
 	{
-		$delay = intval ($delay);
-		$url = addslashes ($url);
+		$delay = intval ( $delay );
+		$url = addslashes ( $url );
 		
 		if ($txt)
 		{
@@ -116,31 +120,41 @@ class system
 			$form = 'Refresh: '.$delay.'; URL='.$url;
 		} else $form = 'Location: '.$url;
 		
-		header ($form);
-		
 		if (!$delay || !$txt)
 		{
 			self::$display = false;
 		}
+
+		return header ( $form );
 	}
 	
-	public static function checkFields ($fields2check)
+	public static function checkFields ( $fields2check = array() )
 	{	
-		if (!isset ($_POST) || !$fields2check)
-			return;
-				
-		foreach ($_POST as $k=>$v)
+		if ( !isset ( $_POST ) || !$fields2check )
+			return null;
+
+		foreach ( $_POST as $k => $v )
 		{
-			$_POST[$k] = $v = strip_tags ($v, '');
-			
-			if (array_key_exists ($k, $fields2check))
+			//$_POST[$k] = $v = strip_tags ( $v, '' );
+
+			if ( array_key_exists ( $k, $fields2check ) )
 			{
-				if (empty ($v))
-					self::registerEvent ("error", $k, "Заполните поле", $fields2check[$k]);
+				if ( empty ( $v ) )
+				{
+					self::registerEvent ( "error", $k, "Заполните поле", $fields2check[$k] );
+					unset ( $fields2check [ $k ] );
+				}
 			}
 		}
+
+		if ( $fields2check )
+			foreach ( $fields2check as $k => $v )
+			{
+				if ( !isset ( $_POST[$k] ) || !$_POST[$k] )
+					self::registerEvent ( "error", $k, "В форме неь необходимого поля", $fields2check[$k] );
+			}
 		
-		if (empty (self::$errors))
+		if ( empty ( self::$errors ) )
 			return true;
 			
 		return false;
@@ -148,7 +162,7 @@ class system
 	
 	public static function checkErrors()
 	{
-		return count (self::$errors);
+		return count ( self::$errors );
 	}
 
 	public static function chmod ($mode)

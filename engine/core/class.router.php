@@ -23,191 +23,269 @@
 class router extends core {
 
 		private $path; 
-		public $controllerCall = "", $args = array(), $routePath = '/', $get = array();
-		public $objectInheritance = array ("args", "controllerCall", "smarty", "db", "routePath", "mail", "get");
+		public $controllerCall = "", $args = array(), $routePath = '/', $get = array(), $routeOptions = array(), 
+			$moduleDisplayMode = false, $modelPreload = "", $controllerAction = "";
+		public $objectInheritance = array ( "args", "controllerCall", "smarty", "db", "routePath", "mail", "get" );
 
 		function __construct()
 		{
-
+			require ( CORE_PATH . "/config.mainRoute.php" );
+			$this->routeOptions = $routeOptions;
 		}
 
 		function init()
 		{
 			//echo "router<br />";
-			parent::init();
-
-			$this->setPath (CTRL_PATH);
+			system::$core = parent::init();
+			core::$router = $this;
+			$this->setPath ( CTRL_PATH );
 			
 			try {
 				$this->delegate();
-			} catch (Exception $e) {
-				switch ($e->getCode())
+			} catch ( Exception $e ) {
+				switch ( $e->getCode() )
 				{
 					case 404:
-						system::redirect ("http://".system::param("siteDomain")."/blog/search?text=".urlencode($this->routePath),
+						system::redirect ("http://".system::param("siteDomain")."/search?text=".urlencode ( $this->routePath ),
 							5, "Упс! Такого документа на этом сайте нет. Сейчас мы попробуем поискать что-то похожее.");
 						$this->smarty->setCacheID ("REDIRECT|404");
-						system::setParam ("page","redirect");
-						$this->loadModels (array("index"), "index");
-						index::loadCatsMenu();
 						$this->display();
 					break;
 				}
-			}
+			} 
 
 			$this->handleMails();
-			$this->smarty->assign ("errors", system::$errors);
+			$this->smarty->assign ( "errors", system::$errors );
 		}
 
-		function setPath ($path)
+		public function setPath ( $path )
 		{
-			if (!is_dir($path))
+			if ( !is_dir ( $path ) )
 			{
-				throw new Exception ("Invalid controller path: `$path`");
+				throw new Exception ("Invalid controller path: '$path'");
 			}
 			
 			$this->path = $path;
 		}
 
-		private function saveArgs ($parts)
+		private function saveArgs ( $parts )
 		{
-			$this->controllerCall = array_shift ($parts);
-			//if ($this->controllerCall=="index") $this->controllerCall = "";
+			$this->controllerCall = array_shift ( $parts );
 			$this->args = $parts;
 			
-			if ($this->args)
+			if ( $this->args )
 			{
 				$tmp = '';
-				for ($i=0; count ($parts) > $i; ++$i)
+				for ( $i=0; count ( $parts ) > $i; ++$i )
 				{
 					$prev = $i-1;
 					
-					if (isset ($parts[$prev]))
-						$tmp = $parts[$prev];
+					if ( isset ( $parts [ $prev ] ) )
+						$tmp = $parts [ $prev ];
 					
-					if (!empty ($tmp))
-						$this->get[$tmp] = $parts[$i];
+					if ( !empty ( $tmp ) )
+						$this->get [ $tmp ] = $parts[$i];
 				}
 			}
+
+			if ( !count ( $this->args ) )
+				$this->args[] = "index";
+
+			if ( $this->controllerCall )
+				$this->smarty->assign ( "calledController", $this->controllerCall );
+			else $this->smarty->assign ( "calledController", "" );
 		}
 
-		private function getController (&$file, &$controller, &$action, &$args)
+		private function getAdvancedRouting ( &$file, &$controller, &$action, &$model = "" )
 		{
-			$route = (isset ($_GET["act"])) ? $_GET["act"] : "";
+			$routeSocket = $controller;
 
-			$route = trim ($route, '/\\');
-			$this->routePath .= $route;
-			
-			$this->smarty->assign ("routePath", $this->routePath);
-			system::setParam ("routePath", $route);
-			
-			$parts = explode ('/', $route);	
-			$this->saveArgs ($parts);
-			
-			$controller = array_shift ($parts);
-
-			if (empty($controller)) $controller = "index";
-
-			$action = array_shift ($parts);
-			
-			if (empty($action)) $action = "index";
-			
-			$file = $this->path."/$controller.php";
-
-			$this->args[] = $controller;
-
-			if (!is_readable ($file))
+			if ( isset ( $this->routeOptions [ $routeSocket ] ) )
 			{
-				
-				if (!is_readable (TPL_PATH."/static/$controller.tpl"))
+				$routePoint = $this->routeOptions [ $routeSocket ];
+				$controller = $routePoint [ "controller" ];
+				$model = ( ( $routePoint [ "model" ] == "defaultForThisControll" ) ? $controller : $routePoint [ "model" ] );
+				//$action = $routePoint [ "action" ];
+
+				if ( isset ( $routePoint [ "isModule" ] ) )
 				{
-					throw new Exception ("404 Not Found (file $file is NOT readable)", 404);
+					$this->setPath ( MODULES_PATH . "/" . $routeSocket . "/" . system::$frontController . "/controllers" );
+					$this->moduleDisplayMode = true;
+
 				} else {
-					$this->smarty->setCacheID ("STATIC|".$controller);
-					$controller = "index";
-					$file = $this->path."/index.php";
+					//print_r($routePoint);
+					//$this->setPath ( CTRL_PATH );
 				}
+
+			} else {
 				
+				if ( !is_readable ( $this->path . "/$controller.php" ) )
+					$controller = "";
 			}
 
-			$args = $parts;
+			$tmpFile = $this->path . "/$controller.php";
+			
+			if ( !$controller || !is_readable ( $tmpFile ) )
+			{
+				if ( !is_readable ( TPL_PATH . "/static/$routeSocket.tpl" ) )
+				{
+					throw new Exception ( "404 Not Found (file $tmpFile is NOT readable)", 404 );
+				} else {
+                    // staticPage() function must to know what tpl file its need
+                    $this->args[0] = $routeSocket;
+					$controller = "index";
+					$action = "staticPage";
+				}
+			}
+
+			if ( empty ( $controller ) ) $controller = $this->routeOptions["default"]["controller"];
+			if ( empty ( $action ) ) $action = $this->routeOptions["default"]["action"];
+			if ( empty ( $model ) ) $model = $this->routeOptions["default"]["model"];
+
+			$this->modelPreload = $model;
+			$file = $this->path . "/$controller.php";
 		}
 
-		function delegate()
+		private function getController ( &$file, &$controller, &$action )
 		{
-			$this->getController ($controllerFile, $controllerName, $controllerAction, $controllerArgs);
+			$route = ( isset ( $_GET["act"] ) ) ? $_GET["act"] : "";
 
-			require ($controllerFile);
+			$route = trim ( $route, '/\\' );
+			$this->routePath = $route;
 			
+			$this->smarty->assign ( "routePath", $this->routePath );
+			system::setParam ( "routePath", $route );
+			
+			$parts = explode ( '/', $route );
+
+			if ( !isset ( $parts[0] ) || !$parts[0] )
+			{
+				$parts[0] = $this->routeOptions["default"]["controller"];
+			}
+
+			$this->controllerAction =& $action;
+
+			$this->saveArgs ( $parts );
+			
+			$controller = array_shift ( $parts );
+			$action = array_shift ( $parts );
+
+			$this->getAdvancedRouting ( $file, $controller, $action, $model );
+		}
+
+		private function runBeforeDisplay()
+		{
+			require ( ENGINE_PATH . "/function.runBeforeDisplay.php" );
+			runBeforeDisplay ( system::$core );
+		}
+
+		public function delegate()
+		{
+			$this->getController ( $controllerFile, $controllerName, $controllerAction );
+			require_once ( $controllerFile );
 			$class = "controller_$controllerName";
 
-			try
-			{
-				$controllerObject = new $class ($this);
-				
-				if (!is_callable (array ($controllerObject, $controllerAction)))
+			try {
+
+				$controllerObject = new $class ( $this );
+
+				if ( !is_callable ( array ( $controllerObject, $controllerAction ) ) )
 				{
-					$param = $controllerAction;
-					$controllerAction = "index";
+					$controllerAction = $this->routeOptions ["default"]["controller"];
 				}
 
-				$controllerObject->requestModels ($modelsNeeded);
-				$controllerObject->start();
+				$modelsNeeded = array();
+				$controllerObject->requestModels ( $modelsNeeded );
 				$modelsNeeded[] = "index";
-				$this->loadModels ($modelsNeeded, $controllerName);
 
-				$controllerObject->$controllerAction();
+				// load models
+				$this->loadModels ( $modelsNeeded, $controllerName, $this->moduleDisplayMode );
 
-			} catch (_Exception $e) {
+				if ( $controllerObject->start() !== false )
+					$controllerObject->$controllerAction();
+
+			} catch ( _Exception $e ) {
+
 				$errors = $e->criticalError();
-				$this->smarty->assign ("errors", $errors);
+				$this->smarty->assign ( "errors", $errors );
+				$this->displayErrorPage();
+				return false;
+
 			}
 
+			$this->runBeforeDisplay();
 			$this->display();
 		}
  
-		function loadModels ($models, $controllerName)
+		function loadModels ( $models, $controllerName, $isModuleCall = false )
 		{
-			$arrayLength = count ($models);
-			$file = "";
-			
-			if ($arrayLength === 1)
+			$arrayLength = count ( $models );
+			$modulesModelPath = ENGINE_PATH . "/modules/" . $this->controllerCall . "/" . system::$frontController . "/models";
+
+			$file = $modelName = "";
+
+			if ( $isModuleCall )
 			{
-				array_push ($models, $controllerName);
+				$mdlPrefix = $modulesModelPath;
+			} else {
+				$mdlPrefix = MDL_PATH;
+			}
+
+			if ( $arrayLength == 1 )
+			{
+				$models[] = $controllerName;
 				++$arrayLength ;
 			}
 			
-			for ($i=0; $arrayLength > $i; ++$i)
+			for ( $i = 0; $arrayLength > $i; ++$i )
 			{
-				$file = MDL_PATH."/model.".$models[$i].".php";
-				
-				if (!file_exists ($file))
+				if ( !$isModuleCall || isset ( $models[$i]["options"]["isCoreModel"] ) )
 				{
-					system::log (system::WARNING, "Requested not existing model file ('$file')");
+					$mdlPrefix = MDL_PATH;
+				} else {
+					$mdlPrefix = $modulesModelPath;
+				}
+
+				if ( is_array ( $models[$i] ) )
+				{
+					$modelName = $models[$i][0];
+				} else {
+					$modelName = $models[$i];
+				}
+
+				$file = $mdlPrefix . "/model." . $modelName . ".php";
+
+				if ( !file_exists ( $file ) )
+				{
+					//system::log ( system::WARNING, "Requested not existing model file ('$file')" );
 					continue;
 				}
-				
-				require_once ($file);
-				$models[$i]::init ($this);
-				$models[$i]::start();
+
+				require_once ( $file );
+				$modelName::init ( $this );
+				$modelName::start();
 			}
 		}
 	
-		function checkComponent()
+		public function display()
 		{
-			
-		}
-	
-		function display()
-		{
-			if (!system::$display)
+			if ( !system::$display )
 				return;
 			
-			$this->smarty->assign ("args", $this->args);
-			$this->smarty->assign ("get", $this->get);
+			$this->smarty->assign ( "args", $this->args );
+			$this->smarty->assign ( "get", $this->get );
 
-			$page = system::param ("page");
+			$page = system::param ( "page" );
 			$page .= ".tpl";
-			$this->smarty->display ($page);
+
+			if ( $this->moduleDisplayMode )
+				$this->smarty->moduleDisplay ( $page );
+			else $this->smarty->display ( $page );
+		}
+
+		public function displayErrorPage()
+		{
+			$this->smarty->setCacheID ( "coreErrorPage" );
+			$this->smarty->renderPage ( "coreErrorPage.tpl", "coreErrorPage" );
 		}
 }

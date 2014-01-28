@@ -27,14 +27,14 @@ class controller_rss extends controller_base
 	{
 		$this->smarty->setCacheID ("RSS|MAINPAGE");
 
-		if (!$this->smarty->isCached (TPL_PATH."/rss/rssMain.tpl", "RSS|MAINPAGE"))
+		if ( !$this->smarty->isCached() )
         {
 			$sqlData = rss::getLastPosts();
-			$items = array_slice ($sqlData->fetchAll(), 0, 10);
+			$items = $sqlData->fetchAll();
 			$this->smarty->assign ("items", $items);
 		}
 		
-		echo $this->smarty->fetch (TPL_PATH."/rss/rssMain.tpl", "RSS|MAINPAGE");
+		echo $this->smarty->fetch ( TPL_PATH . "/rss/rssMain.tpl", "RSS|MAINPAGE" );
 	}
 
 	function start()

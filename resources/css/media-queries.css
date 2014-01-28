@@ -1,0 +1,116 @@
+/* Disable iOS/WinMobile font size changes */
+@media screen and (max-width: 600px),
+screen and (max-device-width: 480px) {
+    html {
+        -ms-text-size-adjust: none;
+        -webkit-text-size-adjust: none;
+    }
+}
+
+/*
+    Blog style for: Interim and OMFGHUGE
+*/
+
+@media screen and (max-width: 768px) {
+
+}
+
+/*
+    Nav wrap fix
+*/
+@media screen and (max-width: 520px) {
+    body {
+        font: 12px/24px "Helvetica","HelveticaNeue","Helvetica Neue",Helvetica,Arial,sans-serif;
+    }
+    .wrapper {
+        width: 460px;
+
+    }
+
+}
+
+/*
+    Tiny
+*/
+@media screen and (max-width: 480px) {
+
+
+}
+
+/*
+    Tinier
+*/
+@media screen and (max-device-width: 360px)  {
+    body {
+        font: 11px/14px "Helvetica","HelveticaNeue","Helvetica Neue",Helvetica,Arial,sans-serif;
+    }
+    .wrapper {
+        /*width: 460px !important;*/
+
+    }
+
+    .column_5.header {float: none; width: 100%;}
+    .column_5.header .logo {border: none; text-align: center;}
+    .column_5.header .logo img {margin: -1.5em auto 0; width: auto;}
+    .column_7.header {float: none; width: 100%;}
+    .column_7.header .header-menu {display: block; margin: 0 auto; }
+    .column_7.header ul {float: none; margin: 0 auto; }
+    .column_7.header ul li { }
+    .row.tizer {
+        display: none;
+    }
+    .post-image {display: none;}
+
+
+}
+
+@media screen and (max-width: 768px) {
+
+    body {
+        font: 14px/26px "Helvetica","HelveticaNeue","Helvetica Neue",Helvetica,Arial,sans-serif;
+    }
+    .wrapper {
+        width: 100%;
+
+    }
+    .column_5.header {float: none; width: 100%;}
+    .column_5.header .logo {border: none; text-align: center;}
+    .column_5.header .logo img {margin: -1.5em auto 0; }
+    .column_7.header {float: none; width: 100%;}
+    .column_7.header .header-menu {display: block; margin: 0 auto; }
+    .column_7.header ul {float: none; margin: 0 auto; }
+    .column_7.header ul li {border: none; }
+    .column_7.header ul li a{border: none; font-size: 0.9em; padding: 0.4em 0.9em; }
+    .column_7.header ul li a:hover {border: none;background: #c93609;  }
+    .column_7.header ul li:hover  {border: none;background: #c93609;  }
+    .width-50-pr {display: none;}
+
+    .row.tizer {
+        display: none;
+    }
+    .post-image {display: none;}
+}
+
+/*
+    OMFGHUGE
+*/
+@media screen and (min-width: 1025px) {
+    body {
+        font: 14px/26px "Helvetica","HelveticaNeue","Helvetica Neue",Helvetica,Arial,sans-serif;
+    }
+    .wrapper {
+        /*width: 960px;*/
+
+    }
+}
+
+@media screen and (min-width: 1200px) {
+    body {
+        font: 16px/28px "Helvetica","HelveticaNeue","Helvetica Neue",Helvetica,Arial,sans-serif;
+    }
+    .wrapper {
+        width: 1280px;
+
+    }
+}
+

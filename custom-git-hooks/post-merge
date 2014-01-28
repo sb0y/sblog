@@ -1,0 +1,7 @@
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "custom-git-hooks/functions/sbl0g.include.sh"
+source "custom-git-hooks/functions/submodules.include.sh"
+clearCache
+submodules_init
+submodules_pull

@@ -11,7 +11,7 @@ $configuration = array (
 	"db" => array (
 		"database" => "9kg",
 		"user" => "9kg",
-		"password" => "windows", 
+		"password" => "secret", 
 		"connect_host" => "localhost",
 		"codepage" => "utf8"
 	),
@@ -26,6 +26,6 @@ $configuration = array (
 	"settings" => array (
 		"itemsOnPage" => 10,
 		"optimizeHTML" => false,
-		"siteDomain" => "dev.9kg.me"
+		"siteDomain" => "9kg.me"
 	)
 );

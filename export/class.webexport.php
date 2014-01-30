@@ -22,9 +22,9 @@ class vkExport
 
 	function __construct ($mode=self::mode_cli)
 	{
-		$config['secret_key'] = "R1AeSu97PgCDEpf99s7w";
-		$config['client_id'] = 2919631; // номер приложения
-		//$config['user_id'] = 86253; // id текущего пользователя (не обязательно)
+		$config['secret_key'] = "";
+		$config['client_id'] = 0; // номер приложения
+		//$config['user_id'] = 0; // id текущего пользователя (не обязательно)
 		//$config['access_token'] = '569cb60ca21a878ea3';
  		$config['scope'] = "wall,photos,video"; // права доступа к методам (для генерации токена)
 

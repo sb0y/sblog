@@ -36,11 +36,8 @@ class tpl extends Smarty
 
       $this->setCaching ( Smarty::CACHING_LIFETIME_SAVED );
       $this->setCacheLifetime ( 60 * 60 * 24 );
-
-    	$base_url = rtrim ( dirname ( $_SERVER [ "PHP_SELF" ] ), '/\\' ) . '/';
-    	$base_url = "http://" . $this->compile_id . $base_url;
-                    
-      $this->assign ( "urlBase", $base_url );
+      
+      $this->assign ( "urlBase", system::param ( "urlBase" ) );
       $this->assign ( "siteDomain", $this->compile_id );
    }
 

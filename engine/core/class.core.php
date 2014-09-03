@@ -19,6 +19,9 @@ class core
 		$this->mail = new mail;
 		$this->readConfig();
 		$this->db = new db ( $this->config [ "dbConfig" ] );
+
+		$this->initBaseURL();
+
 		$this->smarty = new tpl ( $this->config [ "smartyConfig" ] );
 		$this->smarty->assignByRef ( "errors", system::$errors );
 
@@ -40,6 +43,14 @@ class core
 
 		//echo "core is inited";
 		return $this;
+	}
+
+	public function initBaseURL()
+	{
+		$domain = system::param ( "siteDomain" );
+		$base_url = rtrim ( dirname ( $_SERVER [ "PHP_SELF" ] ), '/\\' ) . '/';
+    	$base_url = "http://" . system::param ( "siteDomain" ) . $base_url;
+    	system::setParam ( "urlBase", $base_url );
 	}
 
 	public function initDB()
@@ -257,6 +268,55 @@ class core
 
 	public static function generateKey()
 	{
-		return time().'_'.self::rand(1,7);
+		return time().'_'.self::rand ( 1, 7 );
+	}
+
+	static private function __smarty_url_handler ( $matches )
+	{
+		if ( isset ( $matches[1] ) && $matches[1] )
+			return $matches[0];
+
+				//print_r ( $matches );
+
+		if ( isset ( $matches[3] ) && $matches[3] )
+		{
+			$base = system::param ( "siteDomain" );
+			$protocol = "http://";
+			$postfix = "...";
+
+			if ( isset ( $matches[2] ) && $matches[2] )
+				$protocol = $matches[2];
+
+			$mask = substr ( $matches[3], 0, 50 );
+			$maskInt = $protocol . $matches[3];
+
+			if ( $mask == $matches[3] )
+				$postfix = "";
+
+			if ( preg_match ( "/([a-zа-яё0-9-._]+\.[a-zа-яё0-9]{2,4})(?:\/.*)/ui", $matches[3], $m2 ) )
+			{
+				if ( isset ( $m2[1] ) && $m2[1] == $base )
+				{
+					return "<a target=\"_blank\" href=\"http://{$matches[3]}\">{$mask}{$postfix}</a>";
+				} else {
+					return "<a target=\"_blank\" href=\"http://$base/away/?url=" . urlencode ( $maskInt ) . "\">{$mask}{$postfix}</a>";	
+				}
+			} else {
+				return "<a target=\"_blank\" href=\"http://$base/away/?url=" . urlencode ( $maskInt ) . "\">{$mask}{$postfix}</a>";	
+			}
+
+		}
+
+		return "";
+	}
+
+	public static function url2href ( $a )
+	{
+		return preg_replace_callback 
+		( 
+			"~(.*\[\s*url\s*=.*)*(http://|https://|ftp://)*(([a-zа-яё0-9-_]{2,}\.[a-zа-яё0-9]{2,4})[a-zа-яё0-9-\~+%=?&#.,;:_/]*)~uims",
+			array ( "core", "__smarty_url_handler" ), 
+			$a 
+		);
 	}
 }

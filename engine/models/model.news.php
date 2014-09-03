@@ -53,21 +53,35 @@ class news extends model_base
 		if ( isset ( $limits["start"] ) && isset ( $limits["end"] ) )
 			$limit = "LIMIT ".$limits["start"].','.$limits["end"];
 
-		$sqlData = self::$db->query ("SELECT DISTINCT * FROM `content` as c, `content_category` as cc, `categories` as cts WHERE ".
-				"cc.`contentID`=c.`contentID` AND cts.`categoryID`=cc.`catID` AND c.`showOnSite`='Y' AND c.`type`='news' AND EXISTS ( ".
-				"SELECT * FROM `content_category` as cc WHERE  cc.`catID`=cts.`categoryID`) GROUP BY c.`contentID` 
-				ORDER BY c.`dt` DESC $limit");
+		$sqlData = self::$db->query ( "SELECT DISTINCT * FROM `content` as c, `content_category` as cc, `categories` as cts WHERE ".
+				"cc.`contentID`=c.`contentID` AND cts.`categoryID`=cc.`catID` AND c.`showOnSite`='Y' AND c.`type`='news' AND EXISTS (".
+				"SELECT * FROM `content_category` as cc WHERE cc.`catID`=cts.`categoryID`) GROUP BY c.`contentID` ".
+				"ORDER BY c.`dt` DESC $limit" );
 		
 		$sqlData->runAfterFetchAll[] = array ( "news", "buildCatsArray" );
 		$sqlData->runAfterFetchAll[] = array ( "news", "makeSlug" );
 		//$sqlData->runAfterFetchAll[] = array ( "news", "buildContentIDArray" );
 
+		if ( $sqlData->getNumRows() <= 0 )
+		{
+			return array ( "col1" => array() , "col2" => array() );
+		}
+
 		$array = $sqlData->fetchAll();
+
+		$leftTop = array_splice ( $array, 0, 3 );
+		$rightTop = array_splice ( $array, 0, 5 );
 
 		$all = floor ( count ( $array ) / 2.5 );
 		$tmp = array_chunk ( $array, $all );
 
-		return array ( "col1"=>$tmp[0] , "col2"=>$tmp[1] );
+		if ( isset ( $tmp[0] ) && $tmp[0] )
+			$leftTop += $tmp[0];
+		
+		if ( isset ( $tmp[1] ) && $tmp[1] )
+			$rightTop += $tmp[1];
+
+		return array ( "col1" => $leftTop , "col2" => $rightTop );
 	}
 	
 	public static function getPosts ( $limits=array(), $type = "news" )

@@ -104,6 +104,11 @@ class system
 	
 	public static function redirect ( $url, $delay = false, $txt = false )
 	{
+		if ( $url == '/' )
+		{
+			$url = system::param ( "urlBase" );
+		}
+
 		$delay = intval ( $delay );
 		$url = addslashes ( $url );
 		
@@ -120,7 +125,7 @@ class system
 			$form = 'Refresh: '.$delay.'; URL='.$url;
 		} else $form = 'Location: '.$url;
 		
-		if (!$delay || !$txt)
+		if ($txt)
 		{
 			self::$display = false;
 		}
@@ -151,7 +156,7 @@ class system
 			foreach ( $fields2check as $k => $v )
 			{
 				if ( !isset ( $_POST[$k] ) || !$_POST[$k] )
-					self::registerEvent ( "error", $k, "В форме неь необходимого поля", $fields2check[$k] );
+					self::registerEvent ( "error", $k, "В форме нет необходимого поля", $fields2check[$k] );
 			}
 		
 		if ( empty ( self::$errors ) )
@@ -181,5 +186,13 @@ class system
 		}
 
 		return $c;
+	}
+
+	public static function HTTPGet ( $key )
+	{
+		if ( isset ( self::$core->get [ $key ] ) && self::$core->get [ $key ] )
+			return self::$core->get [ $key ];
+
+		return "";
 	}
 }

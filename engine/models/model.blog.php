@@ -2,9 +2,16 @@
 class blog extends model_base
 {
 	public static $highlightWords = null;
+	public static $htmlParser = null;
 
 	public static function start()
 	{
+		if ( is_null ( self::$htmlParser ) )
+		{
+			self::$htmlParser = new highlight_code;
+		}
+
+		self::$smarty->assign ( "offset", intval ( system::HTTPGet ( "offset" ) ) );		
 	}
 	
 	public static function isFavorite ( $slug )
@@ -27,21 +34,19 @@ class blog extends model_base
 		return false;
 	}
 
-	public static function getOnePost ( $get, $type = "news" )
+	public static function getOnePost ( $get, $type = "blog" )
 	{
-		if (is_numeric ($get))
+		if ( is_numeric ( $get ) )
 			$mode = "contentID";
-		else if (is_string ($get))
+		else if ( is_string ( $get ) )
 			$mode = "slug";
-				
+
 		$sqlData = self::$db->query ( "SELECT * FROM `content` as c, `content_category` as cc, `categories` as cts WHERE c.`$mode`='?' ".
 		"AND cc.`contentID`=c.`contentID` AND cts.`categoryID`=cc.`catID` AND c.`type`='$type' AND c.`showOnSite`='Y' ".
 		"AND cts.`catType`=c.`type`", $get );
 		
-		$sqlData->runAfterFetch[] = array("blog", "makeSlug");
+		$sqlData->runAfterFetch[] = array ( "blog", "makeSlug" );
 		$sqlData->runAfterFetch[] = array ( "blog", "buildCatsArray" );
-		$sqlData->runAfterFetchAll[] = array ( "blog", "buildCatsArray" );
-		$sqlData->runAfterFetchAll[] = array("blog", "makeSlug");
 
 		return $sqlData;
 	}
@@ -78,7 +83,7 @@ class blog extends model_base
 		return $result;
 	}
 	
-	public static function getPosts ( $limits=array(), $type = "news" )
+	public static function getPosts ( $limits=array(), $type = "blog" )
 	{	
 		$limit = '';
 
@@ -91,7 +96,7 @@ class blog extends model_base
 		
 		$sqlData->runAfterFetchAll[] = array ( "blog", "buildCatsArray" );
 		$sqlData->runAfterFetchAll[] = array ( "blog", "makeSlug" );
-		
+
 		return $sqlData;
 	}
 	
@@ -118,7 +123,7 @@ class blog extends model_base
 		else $limit = "";
 
 		$sqlData = self::$db->query ( "SELECT * FROM `content` as c, `content_category` as cc, `categories` as cts WHERE ".
-		"cc.`contentID`=c.`contentID` AND cts.`categoryID`=cc.`catID` AND c.`showOnSite`='Y' AND c.`type`='news' AND c.`dt` >= 
+		"cc.`contentID`=c.`contentID` AND cts.`categoryID`=cc.`catID` AND c.`showOnSite`='Y' AND c.`type`='blog' AND c.`dt` >= 
 		STR_TO_DATE ('?', '%d.%m.%Y') ORDER BY c.`dt` ASC $limit", $date );
 		
 		$sqlData->runAfterFetchAll[] = array("blog", "buildCatsArray");
@@ -133,7 +138,9 @@ class blog extends model_base
 		$cats = array();
 		$isOneShot = false;
 
-		if ( !isset ( $array[0]["contentID"] ) )
+		$probe = current ( $array );
+
+		if ( !isset ( $probe["contentID"] ) )
 		{
 			$isOneShot = true;
 			$array = array ( $array );
@@ -146,6 +153,15 @@ class blog extends model_base
 			foreach ( $array as $k => $v )
 			{
 				//echo $v["contentID"]."\n";
+
+				if ( !isset ( $v["catID"] ) || !$v["catID"] )
+					$v["catID"] = 0;
+
+				if ( !isset ( $v["catName"] ) || !$v["catName"] )
+					$v["catName"] = "";
+
+				if ( !isset ( $v["catSlug"] ) || !$v["catSlug"] )
+					$v["catSlug"] = "";
 				
 				if ( $id == $v[ "contentID" ] )
 						$cats[ $v["contentID"] ][ $v["catID"] ] = array ( "catName" => $v["catName"], "catSlug" => $v["catSlug"],
@@ -174,32 +190,34 @@ class blog extends model_base
 	public static function arrayUnique ( &$array = array() )
 	{
 		if ( empty ( $array ) )
-			return;
+			return $array;
+
+		$tmp = array();
 				
 		foreach ( $array as $k=>$v )
 		{
-			if (!isset ($tmp[$v["contentID"]]))
+			if ( !isset ( $tmp [ $v [ "contentID" ] ] ) )
 			{
-				$tmp[$v["contentID"]] = $v;
+				$tmp [ $v [ "contentID" ] ] = $v;
 			}
 		}
 		
 		$array = $tmp;
-		
+
 		return $tmp;
 	}
 	
-	public static function showPage ($get)
+	public static function showPage ( $get )
 	{
-		$sqlData = self::getOnePost ($get)->fetchAll();
+		$sqlData = self::getOnePost ( $get )->fetchAll();
 						
 		//echo self::$db->buildHtmlLog();
 		
-		if ($sqlData)
+		if ( $sqlData )
 		{			
-			system::setParam ("page", "post");
-			$sqlData = array_shift ($sqlData);
-			self::$smarty->assign ("post", $sqlData);
+			system::setParam ( "page", "post" );
+			$sqlData = array_shift ( $sqlData );
+			self::$smarty->assign ( "post", $sqlData );
 		
 			return $sqlData;
 		}
@@ -207,7 +225,25 @@ class blog extends model_base
 
 	public static function addComment ( $contentID )
 	{
-		return comments::add ( $contentID );
+		return comments::addCommentQueue ( $contentID, $_POST [ "comment" ] );
+	}
+
+	public static function addCommentBySLUG ( $SLUG )
+	{
+		$SLUG = trim ( preg_replace (  "/[^a-z0-9-_]/i", '', $SLUG ) );
+
+		if ( !$SLUG )
+			return;
+
+		$contentID = 0;
+		$array = self::$db->query ( "SELECT `contentID` FROM `content` WHERE `slug`='?' LIMIT 1", $SLUG )->fetch();
+
+		if ( !$array )
+			return;
+
+		$contentID = intval ( $array [ "contentID" ] );
+
+		return comments::addCommentQueue ( $contentID, $_POST [ "comment" ] );
 	}
 
 	public static function highlightBodyForSearch (&$array=array())
@@ -242,8 +278,9 @@ class blog extends model_base
 			return $array;
 
 		$isOneShot = false;
+		$probe = current ( $array );
 
-		if ( !isset ( $array[0]["contentID"] ) )
+		if ( !isset ( $probe["contentID"] ) )
 		{
 			$isOneShot = true;
 			$array = array ( $array );
@@ -259,5 +296,28 @@ class blog extends model_base
 
 		return $array;
 	}
+
+	public static function highlightCode ( &$data, $key="body" )
+	{
+		return self::$htmlParser->highlightCode ( $data, $key );
+	}
 	
+	public static function search ($query)
+	{
+		$query = preg_replace ("/[^\w\x7F-\xFF\s]/", " ", $query);
+		$query = trim (preg_replace ("/\s(\S{1,3})\s/", " ", preg_replace ("/ +/", "  ", " $query ")));
+		$query = preg_replace ("/ +/", " ", $query);
+
+		self::$highlightWords = str_replace (" ", "|", $query);
+
+		$res = self::$db->query ("SELECT *, co.`contentID`, cc.`catID`, MATCH (`title`,`body`,`author`) AGAINST ('?') as rel
+			FROM `content` as co JOIN `content_category` as cc INNER JOIN `categories` as c ON c.`categoryID`=cc.`catID` AND cc.`contentID`=co.`contentID`
+			WHERE MATCH (`title`,`body`,`author`) AGAINST ('?') > 0", $query, $query);
+
+		$res->runAfterFetchAll[] = array("blog", "buildCatsArray");
+		$res->runAfterFetchAll[] = array("blog", "arrayUnique");
+		$res->runAfterFetchAll[] = array("blog", "highlightBodyForSearch");
+
+		return $res;
+	}
 }

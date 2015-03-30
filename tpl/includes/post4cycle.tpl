@@ -1,30 +1,37 @@
-<div class="entry">
-    <div class="row">
-    {if $item.poster}
-        <div class="col span_2">
-            <a href="{$urlBase}{$item.URL}"><img class="entry_img" src="{$urlBase}content/photo/resized/{$item.poster}" alt="{if $item.short}{$item.short|strip_tags}{else}{$item.body|strip_tags|truncate:100}{/if}" title="{if $item.short|strip_tags}{$item.short}{else}{$item.body|strip_tags|truncate:100}{/if}" /></a>
-        </div>
-        <div class="col span_10">
-        <div class="offset_0_15">
-    {else}
-        <div class="col span_12">
-        <div>
-    {/if}
-            <h2 class="title">
-                <a href="{$urlBase}{$item.URL}">{$item.title}</a>
-            </h2>
+<div class="post col-lg-13" id="post_{$item.contentID}">
+	<h2><a href="{$urlBase}blog/{$item.slug|urlencode}">{$item.title}</a></h2>
+                <ul class="nav nav-pills">
+                    <li title="Дата написания статьи">
+                        <a href="{$urlBase}blog/date/{$item.dt|date_format:"%d.%m.%Y"}"><span class="glyphicon glyphicon-time"></span>&nbsp;{$item.dt|date_format:"%d.%m.%Y"}</a>
+                    </li>
+                    <li title="Автор статьи"><a href="{$urlBase}user/profile/{$item.userID}"><span class="glyphicon glyphicon-user"></span>&nbsp;Sb0y</a></li>
+                    {if count($item.cats) > 1}
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                          Категории <span class="caret"></span>
+                        </a>
+                    </li>
+                    <ul class="dropdown-menu">
+                    {foreach $item.cats as $k=>$v}
+                        <li><a href="{$urlBase}blog/category/{$v.catSlug|urlencode}">{$v.catName}</a></li>
+                    {/foreach}
+                    </ul>
+                    {elseif !empty ( $item.cats )}
+                    {foreach $item.cats as $k=>$v}
+                        {if $v@first}
+                            <li title="Категории статьи"><a href="{$urlBase}blog/category/{$v.catSlug|urlencode}"><span class="glyphicon glyphicon-tag"></span>&nbsp;{$v.catName}</a></li>
+                        {/if}
+                    {/foreach}
+                    {/if}
+                </ul>
 
-                {if $item.short}{$item.short}{else}{$item.body|truncate:100}{/if}
-            </div>
-        </div>
-    </div>
-    <div class="row offset_10_0">
-        <div class="col span_12">
-            <div class="offset_0_0_15">
-                <a href="{$urlBase}{$item.URL}" class="pull_left readmore">Читать далее</a>
-                <a href="{$urlBase}{$item.URL}" class="pull_right margin_0_10">{if $item.comments_count > 0}Комментарии ({$item.comments_count}){else}Откомментировать{/if}</a>
-                <span class="pull_right date">{$item.dt|date_format:"%d"} {$item.dt|month_declination} {$item.dt|date_format:"%Y"}</span>
-            </div>
-        </div>
-    </div>
+	<hr />
+	<div class="content">
+		<article>
+			{if $item.short}{$item.short|nl2br}{else}{$item.body|nl2br}{/if}
+		</article>
+	</div>
+	<div class="post-read-more">
+		<a class="btn btn-primary" href="{$urlBase}blog/{$item.slug|urlencode}">Читать дальше</a>
+	</div>
 </div>

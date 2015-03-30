@@ -1,5 +1,8 @@
 function userClass()
 {
+	var plus = "glyphicon-plus";
+	var minus = "glyphicon-minus";
+
 	function addFriend ( userID, button )
 	{
 		buttonAnim.process ( button, "addFriend" );
@@ -7,20 +10,20 @@ function userClass()
 		$.post ( urlBase + "ajax/friendMngr?action=add&userID=" + userID, function ( res ) 
 		{
 			buttonAnim.finish ( "addFriend" );
+
+			var $button = $( button );
+			var $btnText = $button.find ( "span.btn-text" );
+			var $btnIcon = $button.find ( "span.glyphicon" );
 			var resArr = res.split ( "|" );
 
 			if ( resArr.shift() == "Ok" )
 			{
-				button.innerHTML = resArr.shift() + " у вас в друзьях";
-				var bclasses = button.className.split ( " " );
-				for ( var i=0; bclasses.length > i; ++i )
-				{
-					if ( bclasses[i] == "add" )
-						bclasses[i] = "remove";
-				}
+				$btnText.text ( "Удалить из друзей" );
+				$btnIcon.removeClass ( plus );
+				$btnIcon.addClass ( minus );
 
-				button.className = bclasses.join ( " " );
-				button.className += " active";
+				$button.addClass ( "active" );
+
 			} else {
 				$.jGrowl ( "Произошла ошибка. Код:<br />" + res, { theme: "error" } );
 			}
@@ -35,21 +38,20 @@ function userClass()
 		{
 			buttonAnim.finish ( "removeFriend" );
 
+			var $button = $( button );
+			var $btnText = $button.find ( "span.btn-text" );
+			var $btnIcon = $button.find ( "span.glyphicon" );
+
 			if ( res == "Ok" )
 			{
-				button.innerHTML = "Добавить в друзья";
-				var bclasses = button.className.split ( " " );
-				for ( var i=0; bclasses.length > i; ++i )
-				{
-					if ( bclasses[i] == "remove" )
-						bclasses[i] = "add";
+				$btnText.text ( "Добавить в друзья" );
 
-					if ( bclasses[i] == "active" )
-						bclasses[i] = "";
-				}
+				$btnIcon.removeClass ( minus );
+				$btnIcon.addClass ( plus );
 
-				button.className = bclasses.join ( " " );
-				button.blur();
+				$button.removeClass ( "active" );
+
+				$button.blur();
 			}
 		});
 	}

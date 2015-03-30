@@ -68,7 +68,5 @@ $(function() {
 		popup.showWindow ("login");
 	});
 
-	$("#search").example ("Что ищем?");
-
     $.jGrowl.defaults.closerTemplate = "<div>Закрыть все уведомления</div>";
 });

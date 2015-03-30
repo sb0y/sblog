@@ -110,9 +110,11 @@ function smarty_function_mailto($params, $template)
 
         return '<script type="text/javascript">eval(unescape(\'' . $js_encode . '\'))</script>';
     } elseif ($encode == 'javascript_charcode') {
+
         $string = '<a href="mailto:' . $address . '" ' . $extra . '>' . $text . '</a>';
 
-        for ($x = 0, $y = strlen($string); $x < $y; $x++) {
+        for ($x = 0, $y = strlen($string); $x < $y; $x++) 
+        {
             $ord[] = ord($string[$x]);
         }
 

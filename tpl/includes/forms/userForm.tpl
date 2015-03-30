@@ -1,6 +1,3 @@
-{if !isset ($fill)}
-{assign var=fill value=array()}
-{/if}
 <div id="userRegistration">
 	<div class="field"><label>E-mail</label><span class="red">*</span><br /><input type="text"{if isset ($errors.email)} class="error"{/if} name="email" value="{fromPost var='email' arr=$fill}" />{if isset ($errors.email)}<div class="errorExplain">{$errors.email.txt}</div>{/if}</div>
 	<div class="field"><label>Имя</label><span class="red">*</span><br /><input type="text"{if isset ($errors.nick)} class="error"{/if} name="nick" value="{fromPost var='nick' arr=$fill}" />{if isset ($errors.nick)}<div class="errorExplain">{$errors.nick.txt}</div>{/if}</div>

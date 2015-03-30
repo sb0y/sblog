@@ -46,10 +46,11 @@ class blog extends model_base
 			system::registerEvent ("error", "short", "У новости должен быть анонос текста", "Анонс текста");
 		}
 
-		if ( isset ( $post["short"] ) && mb_strlen ( $post["short"] ) > 140 )
-		{
-			system::registerEvent ("error", "short", "Количество символов в анонсе текста превышет 140 символов.", "Анонс текста слишком длинный");
-		}
+		if ( system::param ( "annotationRestriction" ) )
+			if ( isset ( $post["short"] ) && mb_strlen ( $post["short"] ) > 140 )
+			{
+				system::registerEvent ("error", "short", "Количество символов в анонсе текста превышет 140 символов.", "Анонс текста слишком длинный");
+			}
 
 		if (system::checkErrors())
 		{
@@ -59,7 +60,7 @@ class blog extends model_base
 		return true;
 	}
 
-	public static function writePost ( $post, $type = "news" )
+	public static function writePost ( $post, $type = "blog" )
 	{
 		if (self::postExist ("slug", $post["slug"]))
 		{
@@ -186,14 +187,11 @@ class blog extends model_base
 		$mysqlLimits = array();
 		$offset = 0;
 		$allCount = self::$db->query ("SELECT COUNT(*) as cnt FROM `$target` $clauseSTR")->fetch();
-        $pageCompose = new pagination ($allCount["cnt"]);
+
+        $mysqlLimits = core::pagination ( $allCount [ "cnt" ] );
+
 		$sort = $columns[0]["Field"];
 		$direction = "DESC";
-
-		if (!empty (self::$get["offset"]))
-		{
-			$offset = intval (self::$get["offset"]);
-		}
 
 		if (isset ($_GET["direction"]) && $_GET["direction"])
 		{
@@ -208,20 +206,20 @@ class blog extends model_base
 			$sort = $_GET["sort"];
 		}
 
-		$pageCompose->readInputData ( $offset, 20 );
-		$mysqlLimits = $pageCompose->calculateOffset();
-		$pages = $pageCompose->genPages();
-		self::$smarty->assign ("pages", $pages);
 		self::$smarty->assign ("direction", $direction);
 		self::$smarty->assign ("sort", $sort);
-		self::$smarty->assign ("allCount", $allCount["cnt"]);
 
-		$sqlData = self::$db->query ("SELECT * FROM `$target` $clauseSTR ORDER BY `$sort` $direction LIMIT 
-			{$mysqlLimits["start"]},{$mysqlLimits["end"]}")->fetchAll();	
+		$res = self::$db->query ("SELECT * FROM `$target` $clauseSTR ORDER BY `$sort` $direction LIMIT 
+			{$mysqlLimits["start"]},{$mysqlLimits["end"]}" );
+
+		if ( $target != "categories" )
+			$res->runAfterFetchAll[] = array ( "blog", "makeSlug" );
+
+		$data = $res->fetchAll();	
 		
-		self::$smarty->assign ("list", $sqlData);
+		self::$smarty->assign ( "list", $data );
 
-		return $sqlData;
+		return $data;
 	}
 
 	public static function buildForm ($target)
@@ -245,7 +243,7 @@ class blog extends model_base
 			$catHave = ", (SELECT COUNT(*) FROM `content_category` WHERE `contentID`=$contentID AND `catID`=cID) as catSel";
 		}
 
-		$sqlData = self::$db->query ("SELECT *, `categoryID` as cID$catHave FROM `categories` WHERE `catType`='news'")->fetchAll();
+		$sqlData = self::$db->query ("SELECT *, `categoryID` as cID$catHave FROM `categories` WHERE `catType`='blog'")->fetchAll();
 		self::$smarty->assign ("cats", $sqlData);
 	}
 
@@ -311,7 +309,7 @@ class blog extends model_base
 
 		if ( !isset ($data["showOnSite"]) )
 		{
-			$data["showOnSite"] = 'N';
+			$data [ "showOnSite" ] = 'N';
 		}
 		
 		if ( empty ( $data["short"] ) )
@@ -320,22 +318,19 @@ class blog extends model_base
 
 			if ( is_array ( $data["short"] ) )
 			{
-				$data["short"] = array_shift ( $data["short"] );
+				$data [ "short" ] = array_shift ( $data [ "short" ] );
 			}
-
-		} else {
-			$data["short"] = nl2br ( $data["short"] );
 		}
 
-		if (isset ($data["catName"]))
-			unset ($data["catName"]);
+		if ( isset ( $data [ "catName" ] ) )
+			unset ( $data [ "catName" ] );
 
-		if (isset ($data["catSlug"]))
-			unset ($data["catSlug"]);
+		if ( isset ( $data [ "catSlug" ] ) )
+			unset ( $data [ "catSlug" ] );
 
-		if (!empty ($data["slug"]))
+		if ( !empty ( $data [ "slug" ] ) )
 		{
-			$data["slug"] = core::generateSlug ( $data["slug"] );
+			$data [ "slug" ] = core::generateSlug ( $data [ "slug" ] );
 
 		} else if ( !empty ($data["title"] ) ) {
 
@@ -343,6 +338,10 @@ class blog extends model_base
 		}
 
 		//self::$db->updateTable ("content", $data, "contentID", $id);
+
+		self::$smarty->clearCache ( null, "MAINPAGE|SEARCH_RES|BLOG|CATSELECT|RSS|{$data["slug"]}" );
+		self::$smarty->clearCache ( null, "MAINPAGE" );
+		self::$smarty->clearCache ( null, $data["slug"] );
 		
 		if ( $data["poster"] )
 		{
@@ -356,11 +355,6 @@ class blog extends model_base
 				$data["dt"], $data["title"], $data["slug"], $data["body"], $data["short"], $data["showOnSite"], 
 				$_SESSION["user"]["userID"], $_SESSION["user"]["nick"], $id );
 		}
-
-		self::$smarty->clearCache ( null, "MAINPAGE|SEARCH_RES|BLOG|CATSELECT|RSS|{$data["slug"]}" );
-		self::$smarty->clearCache ( null, "MAINPAGE" );
-		self::$smarty->clearCache ( null, $data["slug"] );
-
 	}
 
 	public static function updateComment ( $commentID )
@@ -506,5 +500,21 @@ class blog extends model_base
 		}
 
 		self::$smarty->assign ("picFiles", $picFiles);
+	}
+
+	public static function makeSlug ( array &$array )
+	{
+		if ( empty ( $array ) )
+			return $array;
+
+		foreach ( $array as $k => $v )
+		{
+			if ( !isset ( $v["slug"] ) )
+				return $array;
+
+			$array [ $k ] [ "URL" ] = $v [ "slug" ];
+		}
+
+		return $array;
 	}
 }

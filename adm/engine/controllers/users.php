@@ -55,10 +55,10 @@ class controller_users extends controller_base
 			$doRedirect = true;
 		}
 
-		blog::buildForm ("users", "AND `userID`=".$this->args[0]);
+		blog::buildForm ("users", "AND `userID`=" . intval ( $this->args[0] ) );
 
 		if ($doRedirect)
-			system::redirect (system::param ("urlBase")."users");
+			system::redirect ( system::param ( "urlBase" ) . "users");
 	}
 
 	function add()

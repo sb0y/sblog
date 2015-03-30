@@ -1,5 +1,6 @@
 function mailProcessor()
 {
+	var noAvatar = "resources/images/no-avatar-small.png";
 	var $avatar = $("#avatarHolder");
 	var $field = null, $list = null, $input = null, $ul = null, $body = null, $selHolder = null, $pseudoInputHolder = null, $pseudoHolder;
 	var canShowList = false, hintInProcess = false, dontClearOnBlur = true, selectedUserIndex = 0;
@@ -51,8 +52,7 @@ function mailProcessor()
 		if ( e.keyCode == 13 && e.ctrlKey )
 		{
 			e.preventDefault();
-			$form.append ( "<input name=\"sendMail\" type=\"hidden\" value=\"sendMail\" />" );
-			$form.submit();
+			sendForm();
 		}
 	});
 
@@ -79,7 +79,7 @@ function mailProcessor()
 
 			if ( !dontClearOnBlur )
 			{
-				$avatar.attr ( "src", urlBase + "resources/images/no-avatar-small.png" );
+				$avatar.attr ( "src", urlBase + noAvatar );
 				$input.val ( "" );
 			} else {
 				dontClearOnBlur = false;
@@ -101,7 +101,7 @@ function mailProcessor()
 				{
 					var $sel = $selHolder.children().last();
 
-					if ( !$sel.hasClass ( "hover" ) )
+					if ( !$sel.hasClass ( "active" ) )
 						$sel.get ( 0 ).onmousedown();
 					else 
 						$sel.find ( "span.close" ).get ( 0 ).onclick();
@@ -150,7 +150,7 @@ function mailProcessor()
 			if ( e.keyCode == 37 && e.keyCode == 39 )
 				return;
 
-			var $selectedLi = $ul.find ( "li.hover" );
+			var $selectedLi = $ul.find ( "li.active" );
 
 			if ( !$selectedLi.length )
 				return;
@@ -161,13 +161,13 @@ function mailProcessor()
 			{
 				// up
 				case 38:
-					$selectedLi.removeClass ( "hover" );
+					$selectedLi.removeClass ( "active" );
 					$tmpNode = $selectedLi.prev();
 
 					if ( !$tmpNode.is ( "li" ) ) // its 'ul' when last or first
 						$tmpNode = $lis.last();
 
-					setAvatar ( $tmpNode.addClass ( "hover" ).get ( 0 ).onmouseover._dropData.avatar );
+					setAvatar ( $tmpNode.addClass ( "active" ).get ( 0 ).onmouseover._dropData.avatar );
 				break;
 				// down
 				case 40:
@@ -177,13 +177,13 @@ function mailProcessor()
 						return showList();
 					}
 
-					$selectedLi.removeClass ( "hover" );
+					$selectedLi.removeClass ( "active" );
 					$tmpNode = $selectedLi.next();
 
 					if ( !$tmpNode.is ( "li" ) )
 						$tmpNode = $lis.first();
 
-					setAvatar ( $tmpNode.addClass ( "hover" ).get ( 0 ).onmouseover._dropData.avatar );
+					setAvatar ( $tmpNode.addClass ( "active" ).get ( 0 ).onmouseover._dropData.avatar );
 				break;
 				// enter
 				case 13:
@@ -196,7 +196,7 @@ function mailProcessor()
 			//e.preventDefault();	
 		});
 
-		setAvatar ( $lis.first().addClass ( "hover" ).get ( 0 ).onmouseover._dropData.avatar );
+		setAvatar ( $lis.first().addClass ( "active" ).get ( 0 ).onmouseover._dropData.avatar );
 		$list.show();
 	}
 
@@ -211,7 +211,7 @@ function mailProcessor()
 		var request = $.ajax(
 		{
 		  type: "GET",
-		  url: "/ajax/userList?nick=" + encodeURIComponent ( possiblyNick ),
+		  url: urlBase + "ajax/userList?nick=" + encodeURIComponent ( possiblyNick ),
 		  dataType: "json"
 		});
 
@@ -223,10 +223,16 @@ function mailProcessor()
 		return request.done ( function ( res )
 		{
 			if ( typeof res.error != "undefined" )
-			{
-				$.jGrowl ( "Произошла ошибка. Код:<br />" + res, { theme: "error" } );
-				return;
-			}
+				switch ( res.error )
+				{
+					case "Empty":
+						$.jGrowl ( "Пользователь с таким именем не найден =(", { theme: "warning" } );
+						return;
+					break;
+					default:
+						$.jGrowl ( "Произошла ошибка. Код:<br />" + res.error, { theme: "error" } );
+						return;
+				}
 
 			$ul.empty();
 
@@ -268,8 +274,15 @@ function mailProcessor()
 
 	function addToList ( nick, avatar, userID )
 	{
+		if ( receivers [ userID ] )
+		{
+			return false;
+		}
+
 		var li = document.createElement ( "li" );
 		li.innerHTML = nick;
+		li.className = "list-group-item";
+
 		li.onmouseover = function()
 		{
 			this._dropData = {};
@@ -278,10 +291,10 @@ function mailProcessor()
 
 			$ul.find ( "li" ).each ( function()
 			{
-				this.className = this.className.replace ( /[^a-z0-9-_]*hover[^a-z0-9-_]*/g, "" );
+				this.className = this.className.replace ( /[^a-z0-9-_]*active[^a-z0-9-_]*/g, "" );
 			});
 
-			this.className = "hover";
+			this.className = "list-group-item active";
 		}
 
 		li.onmouseover._dropData = {"avatar":avatar,"nick":nick,"userID":userID};
@@ -303,12 +316,14 @@ function mailProcessor()
   		}
 
 		$ul.append ( li );
+
+		return true;
 	}
 
 	function setAvatar ( avatar )
 	{
 		$avatar.attr ( "src", urlBase + ( avatar ? ( "content/avatars/" + avatar ) : 
-			"resources/images/no-avatar-small.png" ) );
+			noAvatar ) );
 	}
 
 	function selectUser ( userID, nick, avatar )
@@ -344,10 +359,16 @@ function mailProcessor()
 			var selChildrens = $selHolder.children();
 
 			if ( selChildrens.length )
-				setAvatar ( receivers[ selChildrens.first().attr ("id").replace ( /[^0-9]/g, "" ) ].avatar );
+			{
+				var tmp = selChildrens.first().attr ("id").replace ( /[^0-9]/g, "" );
+				setAvatar ( receivers [ tmp ].avatar );
+			}
 
 			if ( !$selHolder.children().length )
+			{
+				$avatar.attr ( "src", urlBase + noAvatar );
 				$selHolder.hide();
+			}
 
 			if ( selectedUserIndex )
 				selectedUserIndex = 0;
@@ -382,11 +403,11 @@ function mailProcessor()
 			{
 				selChildrens.each ( function ( i )
 				{
-					this.className = this.className.replace ( /[^a-z0-9-_]*hover[^a-z0-9-_]*/g, "" );
+					this.className = this.className.replace ( /[^a-z0-9-_]*active[^a-z0-9-_]*/g, "" );
 				});
 			}
 
-			this.className += " hover";
+			this.className += " active";
 			selectedUserIndex = userID;
 
 			var event = e || window.event;
@@ -427,6 +448,10 @@ function mailProcessor()
 			hintInProcess = false;
 		});
 
+		// если окошко скрывать, а потом открывать, юзеры
+		// будут добавляться повторно
+		$selHolder.empty();
+
 		return request.done ( function ( res )
 		{
 			if ( typeof res.error != "undefined" )
@@ -440,15 +465,21 @@ function mailProcessor()
 		});
 	}
 
+	function sendForm()
+	{
+		$form.append ( "<input name=\"sendMail\" type=\"hidden\" value=\"sendMail\" />" );
+		$form.submit();
+	}
+
 	$input.focus();
 
 	this.setReceiverID = setReceiverID;
+	this.sendForm = sendForm;
 }
 
 window.writeMail = null;
 
-$(function() {
-
+$(function() 
+{
 	window.writeMail = new mailProcessor;
-
 });

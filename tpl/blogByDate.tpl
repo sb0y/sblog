@@ -1,24 +1,17 @@
 {block name=title}Все записи от {$date}{/block}
-{block name=post_summary}
-  
-<div class="offset_10 dark_gray horizontal_borders">
-   <span>{if !empty ($date)}Все записи от {$date}{/if}</span>
-</div>  
-  
-{/block}
 {block name=body}
- <div class="entries">
-    
-    	{if !empty ($posts)}
-        {foreach $posts as $key=>$item}
-		{include file="includes/post4cycle.tpl"}
-        {foreachelse}
-			<p>По вашему запросу ничего не найдено.</p>
-        {/foreach}
-        
-        {else}
-        Ничего не найдено :(
-        {/if}
-        </div>
-        {include file="includes/pagination.tpl"}
+ <div class="blogByDate">
+    {if !empty ($date)}
+    <div class="page-header">
+        <h1>Все записи от {$date}</h1>
+    </div>
+    {/if}
+    {if !empty ($posts)}
+    {foreach $posts as $key=>$item}
+    {include file="includes/post4cycle.tpl"}
+    {/foreach}
+    {else}
+    <p>Ничего не найдено :-(</p>
+    {/if}
+</div>
 {/block}

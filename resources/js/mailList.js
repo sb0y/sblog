@@ -8,8 +8,14 @@ function mailListProcessor()
 	var $markAsUnread = $panel.find ( "#markAsUnread" );
 	var $mailCountHrefInt = $("#mainCountHrefInt");
 
-	$(".messageRow").bind ( "click", function()
+	$(".messageRow").bind ( "click", function ( e )
 	{
+		if ( e.toElement.className == "checkBox" )
+		{
+			e.stopPropagation();
+			return false;
+		}
+
 		var id = this.getAttribute ( "data-id" );
 		
 		if ( !id )
@@ -27,7 +33,7 @@ function mailListProcessor()
 
 		var array = makeMarkArray ( $trs, "N" );
 
-		$.post ( "/ajax/markMails", array.data, 
+		$.post ( urlBase + "ajax/markMails", array.data, 
 		function ( res )
 		{
 			if ( res == "Ok" )
@@ -56,7 +62,7 @@ function mailListProcessor()
 
 		var array = makeMarkArray ( $trs, "Y" );
 
-		$.post ( "/ajax/markMails", array.data, 
+		$.post ( urlBase + "/ajax/markMails", array.data, 
 		function ( res )
 		{
 			if ( res == "Ok" )
@@ -102,7 +108,7 @@ function mailListProcessor()
 			list [ this.getAttribute ( "data-id" ) ] = isRead;
 		});
 
-		$.post ( "/ajax/deleteMailMessages", list, 
+		$.post ( urlBase + "/ajax/deleteMailMessages", list, 
 		function ( res )
 		{
 			if ( res == "Ok" )
@@ -138,7 +144,7 @@ function mailListProcessor()
 
 		tmp [ $node.attr ( "data-id" ) ] = ( $node.hasClass ( "unreadMail" ) ) ? 1 : 0;
 
-		$.post ( "/ajax/deleteMailMessages", tmp, 
+		$.post ( urlBase + "/ajax/deleteMailMessages", tmp, 
 		function ( res )
 		{
 			if ( res == "Ok" )
@@ -190,9 +196,9 @@ function mailListProcessor()
 	{
 		if ( $table.find ( "tr.active" ).length )
 		{
-			$panel.css ( "visibility", "visible" );
+			$panel.show ( "slow" );
 		} else {
-			$panel.css ( "visibility", "hidden" );
+			$panel.hide ( "slow" );
 		}
 	}
 

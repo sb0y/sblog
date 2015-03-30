@@ -102,51 +102,47 @@ class system
 		echo $message . "<br />\n";
 	}
 	
-	public static function redirect ( $url, $delay = false, $txt = false )
-	{
-		if ( $url == '/' )
-		{
-			$url = system::param ( "urlBase" );
-		}
+    public static function redirect ( $url, $delay = false, $txt = "" )
+    {
+        // первый символ /, заменими его на полный путь
+        if ( substr ( $url, 0, 1 ) == '/' )
+        {
+            $url = system::param ( "urlBase" ) . substr ( $url, 1, strlen ( $url ) );
+        }
 
-		$delay = intval ( $delay );
-		$url = addslashes ( $url );
-		
-		if ($txt)
-		{
-			self::$core->smarty->assign ("text", $txt);
-			self::$core->smarty->assign ("delay", $delay);
-			self::$core->smarty->assign ("url", $url);
-			self::setParam ("page", "redirect");
-		}
-			
-		if ($delay)
-		{
-			$form = 'Refresh: '.$delay.'; URL='.$url;
-		} else $form = 'Location: '.$url;
-		
-		if ($txt)
-		{
-			self::$display = false;
-		}
+        $delay = intval ( $delay );
+        $url = addslashes ( $url );
 
-		return header ( $form );
-	}
+        if ( !empty ( $txt ) )
+        {
+            self::$core->smarty->assign ("text", $txt);
+            self::$core->smarty->assign ("delay", $delay);
+            self::$core->smarty->assign ("url", $url);
+            self::setParam ( "page", "redirect" );
+        }
+
+        if ( $delay )
+        {
+            $form = 'Refresh: '.$delay.'; URL='.$url;
+        } else $form = 'Location: '.$url;
+
+        return header ( $form );
+    }
 	
 	public static function checkFields ( $fields2check = array() )
 	{	
-		if ( !isset ( $_POST ) || !$fields2check )
+		if ( !$fields2check )
 			return null;
 
-		foreach ( $_POST as $k => $v )
+		foreach ( $_REQUEST as $k => $v )
 		{
-			//$_POST[$k] = $v = strip_tags ( $v, '' );
+			//$_REQUEST[$k] = $v = strip_tags ( $v, '' );
 
 			if ( array_key_exists ( $k, $fields2check ) )
 			{
 				if ( empty ( $v ) )
 				{
-					self::registerEvent ( "error", $k, "Заполните поле", $fields2check[$k] );
+					self::registerEvent ( "error", $k, "Заполните поле", $fields2check [ $k ] );
 					unset ( $fields2check [ $k ] );
 				}
 			}
@@ -155,8 +151,8 @@ class system
 		if ( $fields2check )
 			foreach ( $fields2check as $k => $v )
 			{
-				if ( !isset ( $_POST[$k] ) || !$_POST[$k] )
-					self::registerEvent ( "error", $k, "В форме нет необходимого поля", $fields2check[$k] );
+				if ( !isset ( $_REQUEST [ $k ] ) || !$_REQUEST [ $k ] )
+					self::registerEvent ( "error", $k, "В форме нет необходимого поля", $fields2check [ $k ] );
 			}
 		
 		if ( empty ( self::$errors ) )
@@ -195,4 +191,47 @@ class system
 
 		return "";
 	}
+
+	public static function ensureDirectory ( $dir )
+    {
+        $ret = 1;
+
+        if ( file_exists ( $dir ) )
+        {
+            return $ret;
+        }
+
+        $ret = mkdir ( $dir, 0755, true );
+
+        if ( !$ret )
+        {
+            $ret = 0;
+            throw new Exception ( "Failed to create directory", $ret );
+        }
+
+        return $ret;
+    }
+
+    public static function getClientIP()
+    {
+        $IP = "";
+
+        if ( isset ( $_SERVER [ "HTTP_CLIENT_IP" ] ) )
+            $IP = $_SERVER [ "HTTP_CLIENT_IP" ];
+        else if ( isset ( $_SERVER [ "HTTP_X_FORWARDED_FOR" ] ) )
+            $IP = $_SERVER [ "HTTP_X_FORWARDED_FOR" ];
+        else if ( isset ( $_SERVER [ "HTTP_X_FORWARDED" ] ) )
+            $IP = $_SERVER [ "HTTP_X_FORWARDED" ];
+        else if ( isset ( $_SERVER [ "HTTP_FORWARDED_FOR" ] ) )
+            $IP = $_SERVER [ "HTTP_FORWARDED_FOR" ];
+        else if ( isset ( $_SERVER [ "HTTP_FORWARDED" ] ) )
+            $IP = $_SERVER [ "HTTP_FORWARDED" ];
+        else if ( isset ( $_SERVER [ "REMOTE_ADDR" ] ) )
+            $IP = $_SERVER [ "REMOTE_ADDR" ];
+        else
+            $IP = "UNKNOWN";
+
+        return $IP;
+    }
+
 }

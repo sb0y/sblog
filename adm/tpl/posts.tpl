@@ -1,39 +1,38 @@
-{extends file="main.tpl"}
 {block name=title}Список всех постов{/block}
 {block name=pageScripts}
-<script type="text/javascript" src="{$urlBase}resources/js/lists.js"></script>
-{/block}
-{block name=sub_sidebar}
-{include file='includes/sidebar/post.tpl'}
+<script type="text/javascript" src="{$urlBaseAdm}resources/js/lists.js"></script>
 {/block}
 {block name=body}
-<div class="header" id="table_head">
-    <a href="#"><i class="icon thumbnails"></i></a>
-    <a href="#" class="active"><i class="icon listview"></i></a>
- 			<span>
-				Всего найдено <strong>{$allCount}</strong> поста(ов)
-			</span>
-			<a href="javascript:;" id="selectAll"><i>Выделить всё</i></a>
-			<span>
-			<form method="POST" id="groupActionsForm">
-				<select id="groupActions" name="groupDelete">
-				<option name="">Выберите действие</option>
-				<option name="deleteAll" id="deleteAllButton" disabled="disabled">Удалить всё</option>
-				</select>
-				<div id="selectHolder"></div>
+<div class="posts">
+<h1 class="page-header">Пользователи</h1>
+<div class="panel panel-default">
+	<div class="panel-body">
+		<p>
+			<form class="form-inline" method="POST" id="groupActionsForm" role="form">
+				<div class="form-group">
+					<a style="margin:0 20px 0 0; border-right: 1px solid #ddd;" href="{$urlBaseAdm}blog/posts/write" class="btn btn-danger">Новый пост</a>
+					<button class="btn btn-primary" href="javascript:;" id="selectAll">Выделить всё</button>&nbsp;
+					<select class="form-control" id="groupActions" name="groupDelete">
+						<option name="">Выполнить в выделенным...</option>
+						<option name="deleteAll" id="deleteAllButton" disabled="disabled">Удалить всё</option>
+					</select>
+					<div id="selectHolder"></div>
+				</div>
 			</form>
-		 </span>	 
+		</p>
+
+	</div>
 </div>
-<div class="table">
-	<table width="100%">
+<div class="table-responsive">
+	<table class="table table-bordered table-striped">
 	<thead>
 		<tr>
 		<th></th>
-			<th><a href="{$urlBase}news/posts?sort=title&direction={$direction}">Заголовок{if $sort=="title"} <img src="{$urlBase}resources/img/icons/arrow_{if $direction=="ASC" && $sort==title}down{else}up{/if}_mini.gif" width="16" height="16" align="absmiddle" />{/if}</th>
+			<th><a href="{$urlBaseAdm}news/posts?sort=title&direction={$direction}">Заголовок{if $sort=="title"} <img src="{$urlBaseAdm}resources/img/icons/arrow_{if $direction=="ASC" && $sort==title}down{else}up{/if}_mini.gif" width="16" height="16" align="absmiddle" />{/if}</th>
 			
-			<th><a href="{$urlBase}news/posts?sort=dt&direction={$direction}">Дата{if $sort=="dt"} <img src="{$urlBase}resources/img/icons/arrow_{if $direction=="ASC" && $sort==dt}down{else}up{/if}_mini.gif" width="16" height="16" align="absmiddle" />{/if}</a></th>
+			<th class="center"><a href="{$urlBaseAdm}news/posts?sort=dt&direction={$direction}">Дата{if $sort=="dt"} <img src="{$urlBaseAdm}resources/img/icons/arrow_{if $direction=="ASC" && $sort==dt}down{else}up{/if}_mini.gif" width="16" height="16" align="absmiddle" />{/if}</a></th>
 			
-			<th><a href="{$urlBase}news/posts?sort=comments_count&direction={$direction}">Комментарии{if $sort=="comments_count"} <img src="{$urlBase}resources/img/icons/arrow_{if $direction=="ASC" && $sort=="comments_count"}down{else}up{/if}_mini.gif" width="16" height="16" align="absmiddle" />{/if}</a></th>
+			<th class="center"><a href="{$urlBaseAdm}news/posts?sort=comments_count&direction={$direction}">Комментарии{if $sort=="comments_count"} <img src="{$urlBaseAdm}resources/img/icons/arrow_{if $direction=="ASC" && $sort=="comments_count"}down{else}up{/if}_mini.gif" width="16" height="16" align="absmiddle" />{/if}</a></th>
 			
 			<th></th>
 			<th></th>
@@ -42,15 +41,19 @@
 	<tbody>
 		{foreach $list as $key => $value}
 			<tr class="postRow {cycle values="odd,even"}" id="{$value.contentID}">
-				<td><a target="_blank" href="/news/{$value.URL}">#{$value.contentID}</a></td>
-				<td><a target="_blank" href="/news/{$value.URL}">{$value.title}</a></td>
-				<td>{$value.dt}</td>
-				<td><a href="{$urlBase}news/showPostComments/{$value.contentID}" class="">{$value.comments_count}</a></td>
-				<td>
-					<a href="{$urlBase}news/editPost?contentID={$value.contentID}" class="btn">Редактировать <i class="icon settings_mini"></i></a>
+				<td class="center"><a target="_blank" href="{$urlBase}blog/{$value.URL}">#{$value.contentID}</a></td>
+				<td style="vertical-align:middle;"><a target="_blank" href="{$urlBase}blog/{$value.URL}">{$value.title}</a></td>
+				<td class="center">{$value.dt}</td>
+				<td class="center"><a href="{$urlBaseAdm}blog/showPostComments/{$value.contentID}" class="">{$value.comments_count}</a></td>
+				<td class="center">
+					<a href="{$urlBaseAdm}blog/posts/edit?contentID={$value.contentID}" class="btn btn-info">
+						<span class="glyphicon glyphicon-edit"></span>&nbsp;<span class="hidden-xs hidden-sm">Редактировать</span>
+					</a>
 				</td>
-				<td>	
-					<a href="{$urlBase}news/posts?action=delete&contentID={$value.contentID}" onclick="return confirm ('Вы уверенны?')" class=""><i class="icon delete_mini"></i></a>
+				<td class="center">	
+					<a href="{$urlBaseAdm}blog/posts?action=delete&contentID={$value.contentID}" onclick="return confirm ('Вы уверенны?')" class="btn btn-danger">
+						<span class="glyphicon glyphicon-remove"></span>&nbsp;<span class="hidden-xs hidden-sm">Удалить</span>
+					</a>
 				</td>
 			</tr>
 		{/foreach}
@@ -58,8 +61,9 @@
 	</table>
 		
 		 <p>
-		 	{assign "pagBase" "news/posts"}
+		 	{assign "pagBase" "blog/posts"}
 			{include file="includes/pagination.tpl"}
 		 </p>
+</div>
 </div>
 {/block}

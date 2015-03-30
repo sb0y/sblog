@@ -61,8 +61,8 @@ $(document).on('click', '.addPictureToPoster',function() {
 
 $(document).on('click', '.addPictureToText',function() {
 	var poster = $(this).attr('data-picture');
-	$data = '<img src="/content/photo/200x200/'+poster+'" />'
-	tinymce.activeEditor.setContent ( tinymce.activeEditor.getContent() + $data );
+	$data = '&nbsp;<a class="post_image" target="_blank" href="/content/photo/original/'+poster+'"><img class="post_image1" src="/content/photo/200x200/'+poster+'" /></a>'
+	tinymce.activeEditor.setContent ( tinymce.activeEditor.getContent() + $data, { format : "raw" } );
 });
 $(document).on('submit', '#resize_form',function() { 
     $(this).ajaxSubmit({

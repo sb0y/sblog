@@ -24,40 +24,24 @@
 
 class rss extends model_base
 {
-	public static function start()
+	public static function start ()
 	{
 		system::$display = false;
-		self::setHTTPHeaders();
-	}
-
-	public static function setHTTPHeaders()
-	{
 		header ("Content-Type: text/xml, charset=utf-8");	
 		// IE cache fix	
 		header ("Cache-Control: no-store, no-cache, must-revalidate");	
 		header ("Pragma: no-cache");
 	}
 	
-	public static function getLastPosts()
+	public static function getLastPosts ()
 	{
 		$sqlData = self::$db->query ("SELECT *, co.`contentID`, UNIX_TIMESTAMP (`dt`) as tms FROM `content` as co 
-		JOIN `content_category` as cc INNER JOIN `categories` as c ON c.`categoryID`=cc.`catID` AND cc.`contentID`=co.`contentID` AND co.`showOnSite`='Y' 
+		JOIN `content_category` as cc INNER JOIN `categories` as c ON c.`categoryID`=cc.`catID` AND cc.`contentID`=co.`contentID` 
 		ORDER BY `dt` DESC");
 			
 		$sqlData->runAfterFetchAll[] = array("blog", "buildCatsArray");
-		//$sqlData->runAfterFetchAll[] = array("blog", "arrayUnique");
+		$sqlData->runAfterFetchAll[] = array("blog", "arrayUnique");
 		
-		return $sqlData;
-	}
-
-	public static function getLastPostsWithType ( $type = "news" )
-	{
-		$sqlData = self::$db->query ("SELECT *, co.`contentID`, UNIX_TIMESTAMP (`dt`) as tms FROM `content` as co 
-		JOIN `content_category` as cc INNER JOIN `categories` as c ON c.`categoryID`=cc.`catID` AND cc.`contentID`=co.`contentID` ".
-		"AND co.`showOnSite`='Y' AND co.`type`='$type' ORDER BY `dt` DESC");
-			
-		$sqlData->runAfterFetchAll[] = array ( "blog", "buildCatsArray" );
-
 		return $sqlData;
 	}
 }

@@ -1,7 +1,12 @@
-{if isset ($pages) && $pages}
-<div class="pagination">
-{foreach $pages as $key => $value}
-<a class="page-numbers page{if $value.options} {$value.options}{/if}" href="{$urlBase}{$routePath|regex_replace:"/\/offset\/[0-9\/]*.*/":""}/offset/{$value.value}{if isset ($smarty.get.text)}?text={$smarty.get.text}{/if}">{$value.value}</a>
-{/foreach}
+{assign "pagBase" "blog"}
+{if $pagination.pagesTotal > 1}
+<div class="pagination bs-component">
+	<ul class="pagination pagination-lg">
+		<li{if $pagination.offset < 2} class="disabled"{/if}><a href="{if $pagination.offset > 1}{$urlBase}{$pagBase}/offset/{$pagination.offset-1}{else}javascript:;{/if}">«</a></li>
+		{foreach $pagination.pages as $key => $value}
+		<li class="page-numbers{if $value.options} {$value.options}{/if}"><a href="{$urlBase}{$pagBase}/offset/{$value.value}">{$value.value}</a></li>
+		{/foreach}
+		<li{if ($pagination.offset*$pagination.itemsOnPage) >= $pagination.allCount} class="disabled"{/if}><a href="{if ($pagination.offset*$pagination.itemsOnPage) <= $pagination.allCount}{$urlBase}{$pagBase}/offset/{$pagination.offset+1}{else}javascript:;{/if}">»</a></li>
+	</ul>
 </div>
 {/if}

@@ -319,7 +319,17 @@ class controller_ajax extends controller_base
 		else $arr["error"] = "Unknown receiverID";
 
 		if ( !isset ( $arr["error"] ) )
+		{
 			$arr = user::mailUserHistory ( $receiverID, $senderID )->fetchAll();
+
+			if ( $arr )
+			{
+				foreach ( $arr as $k => $v )
+				{
+					$arr[$k]["body"] = core::url2href ( $v["body"] );
+				}
+			}
+		}
 
 		if ( empty ( $arr ) )
 			$arr["error"] = "No data";
@@ -397,9 +407,56 @@ class controller_ajax extends controller_base
 		echo json_encode ( $arr );
 	}
 
+	function bookRating()
+	{
+		$retArray = array();
+
+		if ( !isset ( $_SESSION [ "user" ] ) )
+		{
+			$retArray [ "error" ] = array ( "code" => 0, "txt" => "Only for authorized." );
+			echo json_encode ( $retArray );
+			return false;
+		}
+
+		if ( !$_POST || 
+			 !isset ( $_POST [ "ratValue" ] ) || 
+			 !isset ( $_POST [ "bookID" ] ) ||
+			 !$_POST [ "ratValue" ] ||
+			 !$_POST [ "bookID" ] )
+		{
+			return system::redirect ( '/' );
+		}
+
+		$userID = intval ( $_SESSION [ "user" ] [ "userID" ] );
+		$bookID = intval ( $_POST [ "bookID" ] );
+		$ratValue = floatval ( $_POST [ "ratValue" ] );
+
+		$voteCheck = $this->db->query ( "SELECT `entryID` FROM `books_rating` WHERE `userID`=? AND `bookID`=?", $userID, $bookID );
+
+		if ( !$voteCheck->getNumRows() )
+		{
+			$this->db->query ( "INSERT INTO `books_rating` SET `userID`=?,`bookID`=?,`userNick`='?', `ratValue`=?", 
+				$userID, $bookID, $_SESSION [ "user" ] [ "nick" ], $ratValue );
+		} else {
+
+			$this->db->query ( "UPDATE `books_rating` SET `ratValue`=? WHERE `bookID`=? AND `userID`=?", $ratValue, $bookID, $userID );
+		}
+
+		$retArray [ "ratValue" ] = books::calculateRating ( $bookID );
+
+		if ( $retArray [ "ratValue" ] )
+		{
+			$this->db->query ( "UPDATE `books` SET `rating`=? WHERE `bookID`=?", $retArray [ "ratValue" ], $bookID );
+		}
+
+		$this->smarty->clearCache ( null, "book|$bookID" );
+
+		echo json_encode ( $retArray );
+	}
+
 	function requestModels ( &$modelsNeeded )
 	{
-		$modelsNeeded = array();
+		$modelsNeeded = array ( core::moduleModel ( "books" ) );
 	}
 }
 

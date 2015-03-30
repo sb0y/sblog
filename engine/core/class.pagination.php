@@ -74,7 +74,7 @@ class pagination
 			{
 				if ($x == $this->page) 
 				{
-					$this->htmlRender[] = array ("value"=>$x, "options"=>"current");
+					$this->htmlRender[] = array ("value"=>$x, "options"=>"active");
 				} else {
 					$this->htmlRender[] = array ("value"=>$x, "options"=>false);
 				} 

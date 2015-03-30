@@ -4,10 +4,10 @@ class core
 	public $smarty, $db, $mail;
 	public $params = array(), $permMode = null, $errors = array();
 	public $config = array ( "smartyConfig"=>array(), "dbConfig"=>array() );
-	
+
 	static public $router = null;
 	static public $modulesLoader = null;
-	public $configIsReaded = false;
+	public $configIsReaded = false, $pageWasSet = false;
 
 	public function __construct()
 	{
@@ -50,6 +50,10 @@ class core
 		$domain = system::param ( "siteDomain" );
 		$base_url = rtrim ( dirname ( $_SERVER [ "PHP_SELF" ] ), '/\\' ) . '/';
     	$base_url = "http://" . system::param ( "siteDomain" ) . $base_url;
+
+    	if ( defined ( "ROOT_PATH_ADM" ) )
+    		$base_url = str_replace ( array ( "/adm", "adm" ), '', $base_url );
+
     	system::setParam ( "urlBase", $base_url );
 	}
 
@@ -202,26 +206,37 @@ class core
 
 	public static function model ( $model )
 	{
-		return array ( $model, "options" => array( "isCoreModel" => true ) );
+		return array ( $model, "options" => array ( "isCoreModel" => true ) );
 	}
+
+    public static function moduleModel ( $model )
+    {
+        return array ( $model, "options" => array ( "isModuleModel" => true ) );
+    }
+
 
 	public static function pagination ( $allCount, $offset = 1 )
 	{
+		$offset = intval ( system::HTTPGet ( "offset" ) );
+
 		if ( $offset == 0 )
 			$offset = 1;
 
+		$smarty = array();
+
+		$smarty [ "itemsOnPage" ] = intval ( system::param ( "itemsOnPage" ) );
+		$smarty [ "offset" ] = $offset;
+		$smarty [ "allCount" ] = $allCount;
+
 		$pageCompose = new pagination ( $allCount );
-		$pageCompose->setPerPage ( intval ( system::param ( "itemsOnPage" ) ) );
+		$pageCompose->setPerPage ( $smarty [ "itemsOnPage" ] );
 		$pageCompose->readInputData ( $offset );
 		$mysqlLimits = $pageCompose->calculateOffset();
 	
-		$pages = $pageCompose->genPages();
+		$smarty [ "pages" ] = $pageCompose->genPages();
+		$smarty [ "pagesTotal" ] = count ( $smarty [ "pages" ] );
 
-		if ( count ( $pages ) > 1 )
-		{
-			system::$core->smarty->assign ( "pages", $pages );
-			system::$core->smarty->assign ( "activePage", $offset );
-		}
+		system::$core->smarty->assign ( "pagination", $smarty );
 
 		return $mysqlLimits;
 	}

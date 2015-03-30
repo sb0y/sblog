@@ -1,67 +1,153 @@
 {block name=title}Панель управления профилем{/block}
-{block name=post_summary}
-<div class="offset_10 dark_gray horizontal_borders">
-	<span>Панель управления профилем</span>
-</div>
-{/block}
 {block name=body}
-<div class="row">
-	
-	<div class="col span_8">
-		<div class="pull_left">
-		{if $fill.avatar!="NULL" && $fill.avatar}
-			<a target="_blank" href="{$urlBase}content/avatars/{$fill.avatar}">
-				<img src="{$urlBase}content/avatars/{$fill.avatar}" alt="Это Вы :)" title="Это Вы :)" class="userpic" />
-			</a>
-			<div class="panelUnderPicture">
-			{if $smarty.session.user.source=='direct'}
-			<a id="deleteUserAvatar" onclick="return confirm ('Вы уверены?')" href="?delUserAvatar=true">Удалить аватару</a>
-			{/if}
-			</div>
-		{else}
-			<img src="{$urlBase}resources/images/no-avatar-small.png" alt="У вас нет аватара..." title="У вас нет аватара..." class="userpic" />
-		{/if}
-		</div>
-		<div class="block pull_left margin_0_10">
-		<h2>{$fill.nick}</h2>
-		<span class="date">Зарегистрированый пользователь</span>
-		</div>
+<div class="userProfile">
+	<div class="page-header">
+		<h1>Панель управления пользователя <strong>{$fill.nick}</strong></h1>
 	</div>
-	<div class="col span_4">
-		<form id="updateProfileForm" method="post" name="updateProfile" enctype="multipart/form-data">		
-			<div class="field"><input type="file"{if isset ($errors.avatar)} class="error"{/if} name="avatar"{if $smarty.session.user.source!='direct'} disabled{/if} />{if isset ($errors.avatar)}<div class="errorExplain">{$errors.avatar.txt}</div>{/if}</div>
-			<div class="inputs">
-				
-				<div class="field"><label>Имя</label><br /><input type="text"{if isset ($errors.nick)} class="error"{/if} name="nick" value="{fromPost var='nick' arr=$fill}" />{if isset ($errors.nick)}<div class="errorExplain">{$errors.nick.txt}</div>{/if}</div>
-				
-				<div class="field"><label>E-mail</label><br /><input type="text"{if isset ($errors.email)} class="error"{/if} name="email" value="{fromPost var='email' arr=$fill}" />{if isset ($errors.email)}<div class="errorExplain">{$errors.email.txt}</div>{/if}</div>
 
-				<div class="field"><label><input type="checkbox"{if isset ($errors.showEmail)} class="error"{/if} value="Y" name="showEmail"{if $fill.showEmail=="Y"} checked {/if} /> Показывать e-mail</label>{if isset ($errors.showEmail)}<div class="errorExplain">{$errors.showEmail.txt}</div>{/if}</div>
-	
-				<div class="field"><label>Skype</label><br /><input type="text"{if isset ($errors.skype)} class="error"{/if} name="skype" value="{fromPost var='skype' arr=$fill}" />{if isset ($errors.skype)}<div class="errorExplain">{$errors.skype.txt}</div>{/if}</div>
+	<div class="col-md-3 text-center">
+		<h4 class="avatar">Фото</h4>
+		{if $fill.avatar}
+		<a target="_blank" href="{$urlBase}content/avatars/{$fill.avatar}">
+			<img src="{$urlBase}{$fill|resolveAvatar}" alt="Это Вы :)" title="Это Вы :)" class="img-responsive profileAvatar" />
+		</a>
+		<div class="panelUnderPicture">
+			{if $smarty.session.user.source=='direct'}
+			<a id="deleteUserAvatar" onclick="return confirm ('Вы уверены?')" href="{$urlBase}user/controlpanel?delUserAvatar=true">Удалить</a>
+			{/if}
+		</div>
+		{else}
+		<img src="{$urlBase}resources/images/no-avatar-small.png" alt="У вас нет аватара..." title="У вас нет аватара..." class="img-responsive profileAvatar">
+		{/if}
+	</div>
 
-				<div class="field"><label>Профиль в Facebook</label><br /><input type="text"{if isset ($errors.facebookURL)} class="error"{/if} name="facebookURL" value="{if $smarty.session.user.source=='facebook'}{$fill.profileURL}{else}{fromPost var='facebookURL' arr=$fill}{/if}"}{if $smarty.session.user.source=='facebook'} disabled{/if} />{if isset ($errors.facebookURL)}<div class="errorExplain">{$errors.facebookURL.txt}</div>{/if}</div>
+	<br />
 
-				<div class="field"><label>Профиль в ВКонтакте</label><br /><input type="text"{if isset ($errors.vkURL)} class="error"{/if} name="vkURL" value="{if $smarty.session.user.source=='vkontakte'}{$fill.profileURL}{else}{fromPost var='vkURL' arr=$fill}{/if}"}{if $smarty.session.user.source=='vkontakte'} disabled{/if} />{if isset ($errors.vkURL)}<div class="errorExplain">{$errors.vkURL.txt}</div>{/if}</div>
-
-				<div class="field"><label>Профиль в Twitter</label><br /><input type="text"{if isset ($errors.twitterURL)} class="error"{/if} name="twitterURL" value="{if $smarty.session.user.source=='twitter'}{$fill.profileURL}{else}{fromPost var='twitterURL' arr=$fill}{/if}"}{if $smarty.session.user.source=='twitter'} disabled{/if} />{if isset ($errors.twitterURL)}<div class="errorExplain">{$errors.twitterURL.txt}</div>{/if}</div>
-
-				<div class="field"><label>Профиль в Google Plus</label><br /><input type="text"{if isset ($errors.gplusURL)} class="error"{/if} name="gplusURL" value="{if $smarty.session.user.source=='google'}{$fill.profileURL}{else}{fromPost var='gplusURL' arr=$fill}{/if}"}{if $smarty.session.user.source=='google'} disabled{/if} />{if isset ($errors.gplusURL)}<div class="errorExplain">{$errors.gplusURL.txt}</div>{/if}</div>
-
-				<div class="field"><label>Пароль</label><span class="red">*</span><br /><input type="password"{if isset ($errors.password1)} class="error"{/if} name="password1" value="" {if $smarty.session.user.source!='direct'} disabled{/if} />{if isset ($errors.password1)}<div class="errorExplain">{$errors.password1.txt}</div>{/if}</div>
+	<div class="col-md-7">
 		
-				<div class="field"><label>Пароль ещё раз</label><span class="red">*</span><br /><input type="password"{if isset ($errors.password2)} class="error"{/if} name="password2" value="" {if $smarty.session.user.source!='direct'} disabled{/if} />{if isset ($errors.password2)}<div class="errorExplain">{$errors.password2.txt}</div>{/if}</div>
+		<div class="alert alert-info">
 
-				<div class="req-wrap">
-					<div class="field required"><span class="red">*</span>&nbsp;&#151; обязательное поле</div>
+		<form role="form" id="updateProfileForm" method="post" name="updateProfile" enctype="multipart/form-data">
+
+				<div class="form-group{if isset ($errors.avatar)} has-error{/if}">
+		    		<label for="inputAvatar" class="control-label">Фото</label>
+		      		<input type="file" name="avatar" value="{fromPost var='avatar' arr=$fill}" class="form-control" id="inputAvatar" placeholder="Ваше фото">
+			      	{if isset ($errors.avatar)}
+			    	<span class="help-block help-danger">
+			    		{$errors.avatar.txt}
+			    	</span>
+			    	{/if}
+		  		</div>
+
+		  		<div class="form-group{if isset ($errors.email)} has-error{/if}">
+		  			<label for="inputEmail" class="control-label">E-mail&nbsp;<span class="text-danger">*</span></label>
+		      		<input type="email" name="email" value="{if !isset($errors.email)}{fromPost var='email' arr=$fill}{/if}" class="form-control" id="inputEmail" placeholder="Email" />
+			      	{if isset ($errors.email)}
+			    	<span class="help-block help-danger">
+			    		{$errors.email.txt}
+			    	</span>
+			    	{/if}
+			    	<span class="help-block">
+						<label><input id="inputShowEmail" type="checkbox" value="Y" name="showEmail"{if $fill.showEmail=="Y"} checked{/if}>&nbsp;Показывать e-mail на сайте</label>
+					</span> 
+		  		</div>
+
+		  		<div class="form-group{if isset ($errors.nick)} has-error{/if}">
+		  			<label for="inputNick" class="control-label">Имя&nbsp;<span class="text-warning">*</span></label>
+		      		<input type="text" name="nick" value="{if !isset($errors.nick)}{fromPost var='nick' arr=$fill}{/if}" class="form-control" id="inputNick" placeholder="Имя" />
+			      	{if isset ($errors.nick)}
+			    	<span class="help-block help-danger">
+			    		{$errors.nick.txt}
+			    	</span>
+			    	{/if}
+		    	</div>
+
+		  		<div class="form-group{if isset ($errors.skype)} has-error{/if}">
+		  			<label for="inputSkype" class="control-label">Skype</label>
+		      		<input type="text" name="skype" value="{fromPost var='skype' arr=$fill}" class="form-control" id="inputSkype" placeholder="Skype" />
+			      	{if isset ($errors.skype)}
+			    	<span class="help-block help-danger">
+			    		{$errors.skype.txt}
+			    	</span>
+			    	{/if}
+		  		</div>
+
+		  		<div class="form-group{if isset ($errors.facebookURL)} has-error{/if}">
+		  			<label for="inputFacebook" class="control-label">Facebook</label>
+		      		<input type="text" name="facebookURL" value="{if $smarty.session.user.source=='facebook'}{$fill.profileURL}{else}{fromPost var='facebookURL' arr=$fill}{/if}"{if $smarty.session.user.source=='facebook'} disabled{/if} class="form-control" id="inputFacebook" placeholder="Ссылка на Facebook" />
+		      		{if isset ($errors.facebookURL)}
+			    	<span class="help-block help-danger">
+			    		{$errors.facebookURL.txt}
+			    	</span>
+			    	{/if}
+		  		</div>
+
+			  	<div class="form-group{if isset ($errors.vkontakteURL)} has-error{/if}">
+			  		<label for="inputVk" class="control-label">VKontakte</label>
+			    	<input type="text" name="vkURL" value="{if $smarty.session.user.source=='vkontakte'}{$fill.profileURL}{else}{fromPost var='vkURL' arr=$fill}{/if}"{if $smarty.session.user.source=='vkontakte'} disabled{/if} class="form-control" id="inputVk" placeholder="Ссылка на VKontakte" />
+			    	{if isset ($errors.vkURL)}
+			    	<span class="help-block help-danger">
+			    		{$errors.vkURL.txt}
+			    	</span>
+			    	{/if}
+			  	</div>
+
+			  	<div class="form-group{if isset ($errors.twitterURL)} has-error{/if}">
+			  		<label for="inputTwitter" class="control-label">Twitter</label>
+			   		<input type="text" name="twitterURL" value="{if $smarty.session.user.source=='twitter'}{$fill.profileURL}{else}{fromPost var='twitterURL' arr=$fill}{/if}"{if $smarty.session.user.source=='twitter'} disabled{/if} class="form-control" id="inputTwitter" placeholder="Ссылка на Twitter" />
+			   		{if isset ($errors.twitterURL)}
+			    	<span class="help-block help-danger">
+			    		{$errors.twitterURL.txt}
+			    	</span>
+			    	{/if}
 				</div>
-			
-				<div class="field submit">
-					<button type="submit">Сохранить</button>
+
+				<div class="form-group{if isset ($errors.gplusURL)} has-error{/if}">
+					<label for="inputGplus" class="control-label">Google Plus</label>
+			   		<input type="text" name="gplusURL" value="{if $smarty.session.user.source=='google'}{$fill.profileURL}{else}{fromPost var='gplusURL' arr=$fill}{/if}"{if $smarty.session.user.source=='google'} disabled{/if} class="form-control" id="inputGplus" placeholder="Ссылка на Google Plus" />
+			      	{if isset ($errors.gplusURL)}
+			    	<span class="help-block help-danger">
+			    		{$errors.gplusURL.txt}
+			    	</span>
+			    	{/if}
 				</div>
-			</div>
-		</form>
+
+			  	<div class="form-group{if isset ($errors.password1)} has-error{/if}">
+			  		<label for="inputPassword1" class="control-label">Пароль&nbsp;<span class="text-warning">*</span></label>
+			    	<input autocomplete="off" type="password" name="password1" value=""{if $smarty.session.user.source!='direct'} disabled{/if} class="form-control" id="inputPassword1" placeholder="Ваш пароль" />
+				   	{if isset ($errors.password1)}
+				    <span class="help-block help-danger">
+				    	{$errors.password1.txt}
+				    </span>
+				    {/if}
+				</div>
+
+				<div class="form-group{if isset ($errors.password2)} has-error{/if}">
+					<label for="inputPassword2" class="control-label">Пароль ещё раз&nbsp;<span class="text-warning">*</span></label>
+				    <input autocomplete="off" type="password" name="password2" value=""{if $smarty.session.user.source!='direct'} disabled{/if} class="form-control" id="inputPassword2" placeholder="Ваш пароль ещё раз" />
+				    {if isset ($errors.password2)}
+					<span class="help-block help-danger" style="margin: 5px 0 -5px 0;">
+						{$errors.password2.txt}
+					</span>
+					{/if}
+				</div>
+
+				<div class="form-group">
+									<hr>
+
+					<div class="req-wrap">
+						<div class="required"><span class="text-danger">*</span>&nbsp;&#151; обязательное поле</div>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="col-sm-offset-4">
+						<button type="submit" class="btn btn-default">Сохранить</button>
+					</div>
+				</div>
+
+			</form>
+		</div>
 	</div>
 </div>
-
 {/block}

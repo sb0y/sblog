@@ -24,8 +24,8 @@ class router extends core {
 
 		private $path; 
 		public $controllerCall = "", $args = array(), $routePath = '/', $get = array(), $routeOptions = array(), 
-			$moduleDisplayMode = false, $modelPreload = "", $controllerAction = "";
-		public $objectInheritance = array ( "args", "controllerCall", "smarty", "db", "routePath", "mail", "get" );
+			$moduleDisplayMode = false, $modelPreload = "", $controllerAction = "", $controllerArg = "";
+		public $objectInheritance = array ( "args", "controllerCall", "smarty", "db", "routePath", "mail", "get", "arg" );
 
 		function __construct()
 		{
@@ -51,6 +51,7 @@ class router extends core {
 						$this->smarty->setCacheID ("REDIRECT|404");
 						$this->display();
 					break;
+					default:
 				}
 			} 
 
@@ -171,6 +172,8 @@ class router extends core {
 			$action = array_shift ( $parts );
 
 			$this->getAdvancedRouting ( $file, $controller, $action, $model );
+
+			$this->arg = $action;
 		}
 
 		private function runBeforeDisplay()
@@ -210,7 +213,6 @@ class router extends core {
 				$this->smarty->assign ( "errors", $errors );
 				$this->displayErrorPage();
 				return false;
-
 			}
 
 			$this->runBeforeDisplay();
@@ -246,11 +248,17 @@ class router extends core {
 					$mdlPrefix = $modulesModelPath;
 				}
 
-				if ( is_array ( $models[$i] ) )
+				if ( is_array ( $models [ $i ] ) )
 				{
-					$modelName = $models[$i][0];
+					$modelName = $models [ $i ] [ 0 ];
 				} else {
-					$modelName = $models[$i];
+					$modelName = $models [ $i ];
+				}
+
+				// loading model from the core controller
+				if ( isset ( $models [ $i ] [ "options" ][ "isModuleModel" ] ) )
+				{
+					$mdlPrefix = MODULES_PATH . "/$modelName/" . system::$frontController . "/models";
 				}
 
 				$file = $mdlPrefix . "/model." . $modelName . ".php";
@@ -271,16 +279,34 @@ class router extends core {
 		{
 			if ( !system::$display )
 				return;
-			
+		
 			$this->smarty->assign ( "args", $this->args );
 			$this->smarty->assign ( "get", $this->get );
-
 			$page = system::param ( "page" );
+			$debug = system::param ( "debug" );
+
+			if ( $this->controllerCall && 
+				 $this->controllerCall != "index" && 
+				 $this->pageWasSet )
+			{
+				$page = $this->controllerCall;
+			}
+
 			$page .= ".tpl";
+
+			if ( $debug && system::param ( "debugSmartyOutput" ) )
+			{
+				$this->smarty->assign ( "debugOut", $this->db->buildHtmlLog() );
+			}
 
 			if ( $this->moduleDisplayMode )
 				$this->smarty->moduleDisplay ( $page );
 			else $this->smarty->display ( $page );
+
+			if ( $debug && !system::param ( "debugSmartyOutput" ) )
+			{
+				echo $this->db->buildHtmlLog();
+			}
 		}
 
 		public function displayErrorPage()

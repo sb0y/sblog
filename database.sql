@@ -1,8 +1,8 @@
--- MySQL dump 10.14  Distrib 5.5.32-MariaDB, for Linux (x86_64)
+-- MySQL dump 10.14  Distrib 5.5.39-MariaDB, for Linux (x86_64)
 --
--- Host: localhost    Database: 9kg
+-- Host: localhost    Database: bagrintsev
 -- ------------------------------------------------------
--- Server version	5.5.32-MariaDB-log
+-- Server version	5.5.39-MariaDB-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -28,25 +28,7 @@ CREATE TABLE `categories` (
   `catSlug` varchar(255) NOT NULL DEFAULT '',
   `catType` varchar(10) DEFAULT 'news',
   PRIMARY KEY (`categoryID`,`catSlug`(3))
-) ENGINE=MyISAM AUTO_INCREMENT=25 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `comment_change`
---
-
-DROP TABLE IF EXISTS `comment_change`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `comment_change` (
-  `entryID` int(22) NOT NULL AUTO_INCREMENT,
-  `userID` int(22) DEFAULT NULL,
-  `dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `commentID` int(22) DEFAULT NULL,
-  `contentID` int(22) DEFAULT NULL,
-  `voteType` enum('-','+') DEFAULT NULL,
-  PRIMARY KEY (`entryID`)
-) ENGINE=MyISAM AUTO_INCREMENT=24 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=117 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -58,9 +40,9 @@ DROP TABLE IF EXISTS `comments`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `comments` (
   `commentID` int(10) NOT NULL AUTO_INCREMENT,
-  `contentID` int(11) DEFAULT NULL,
-  `userID` int(11) DEFAULT NULL,
-  `reply_to` int(22) DEFAULT '0',
+  `contentID` int(3) NOT NULL,
+  `userID` int(3) NOT NULL DEFAULT '0',
+  `reply_to` int(3) NOT NULL DEFAULT '0',
   `dt` datetime DEFAULT NULL,
   `email` varchar(200) NOT NULL,
   `author` varchar(100) NOT NULL,
@@ -68,9 +50,9 @@ CREATE TABLE `comments` (
   `guest` enum('Y','N') DEFAULT 'N',
   `ip` varchar(10) DEFAULT NULL,
   `type` varchar(10) DEFAULT NULL,
-  `rate` int(10) NOT NULL DEFAULT '0',
+  `rate` int(10) DEFAULT '0',
   PRIMARY KEY (`commentID`)
-) ENGINE=MyISAM AUTO_INCREMENT=48 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -81,29 +63,31 @@ DROP TABLE IF EXISTS `content`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `content` (
-  `contentID` int(22) NOT NULL AUTO_INCREMENT,
+  `contentID` int(3) NOT NULL AUTO_INCREMENT,
+  `categoryID` varchar(255) NOT NULL,
   `userID` int(3) NOT NULL,
   `tagID` varchar(255) NOT NULL,
   `author` varchar(40) NOT NULL,
   `title` varchar(255) NOT NULL,
-  `slug` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL DEFAULT '',
   `body` text NOT NULL,
-  `poster` text NOT NULL,
+  `poster` text,
   `short` text NOT NULL,
   `comments_count` int(3) NOT NULL DEFAULT '0',
   `sort` int(3) NOT NULL,
-  `dt` datetime DEFAULT NULL,
+  `dt` date DEFAULT NULL,
   `showOnSite` enum('Y','N') DEFAULT 'N',
   `editedByID` int(11) DEFAULT NULL,
   `editedOn` datetime DEFAULT NULL,
-  `editedByNick` varchar(255) DEFAULT '',
-  `type` varchar(10) DEFAULT 'news',
+  `editedByNick` varchar(255) DEFAULT NULL,
+  `type` varchar(10) DEFAULT NULL,
   `key` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`contentID`,`slug`(8)),
-  KEY `userID` (`userID`),
-  KEY `slug` (`slug`),
-  FULLTEXT KEY `searchindex` (`title`,`body`,`slug`,`author`)
-) ENGINE=MyISAM AUTO_INCREMENT=100 DEFAULT CHARSET=utf8;
+  FULLTEXT KEY `body` (`body`),
+  FULLTEXT KEY `title` (`title`),
+  FULLTEXT KEY `url_name` (`slug`),
+  FULLTEXT KEY `body_2` (`body`,`title`,`author`)
+) ENGINE=MyISAM AUTO_INCREMENT=151 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -118,68 +102,30 @@ CREATE TABLE `content_category` (
   `contentID` int(8) DEFAULT NULL,
   `catID` int(8) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=535 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=365 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `content_drafts`
+-- Table structure for table `drafts`
 --
 
-DROP TABLE IF EXISTS `content_drafts`;
+DROP TABLE IF EXISTS `drafts`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `content_drafts` (
-  `draftID` int(11) NOT NULL AUTO_INCREMENT,
-  `contentID` int(22) DEFAULT NULL,
-  `userID` int(22) DEFAULT NULL,
-  `dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `data` text,
-  `module` varchar(20) DEFAULT NULL,
-  `draft_nick` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`draftID`)
-) ENGINE=MyISAM AUTO_INCREMENT=124 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `export_log`
---
-
-DROP TABLE IF EXISTS `export_log`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `export_log` (
-  `entryID` int(11) NOT NULL AUTO_INCREMENT,
-  `contentID` int(22) DEFAULT NULL,
-  `slug` varchar(255) DEFAULT NULL,
-  `dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `type` varchar(10) DEFAULT NULL,
-  `module` varchar(20) DEFAULT NULL,
-  `social_type` varchar(20) DEFAULT NULL,
-  PRIMARY KEY (`entryID`)
-) ENGINE=MyISAM AUTO_INCREMENT=64 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `favorites`
---
-
-DROP TABLE IF EXISTS `favorites`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `favorites` (
-  `favID` int(11) NOT NULL AUTO_INCREMENT,
-  `userID` int(11) DEFAULT NULL,
-  `contentID` int(22) NOT NULL,
-  `slug` varchar(255) DEFAULT NULL,
-  `author` varchar(255) DEFAULT NULL,
-  `addDate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `type` varchar(10) DEFAULT NULL,
-  PRIMARY KEY (`favID`),
-  KEY `slug` (`slug`),
-  KEY `contentID` (`contentID`),
-  KEY `addDate` (`addDate`),
-  KEY `userID` (`userID`)
-) ENGINE=MyISAM AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
+CREATE TABLE `drafts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `contentID` int(3) NOT NULL DEFAULT '0',
+  `userID` int(3) NOT NULL,
+  `tagID` varchar(255) NOT NULL,
+  `author` varchar(40) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `url_name` varchar(255) NOT NULL,
+  `body` text NOT NULL,
+  `sort` int(3) NOT NULL,
+  `dt` date DEFAULT NULL,
+  `draft_add_date` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=27 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -195,7 +141,7 @@ CREATE TABLE `friends` (
   `u2` int(22) DEFAULT NULL,
   `dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`friendshipID`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=48 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -215,7 +161,7 @@ CREATE TABLE `messages` (
   `subject` varchar(255) DEFAULT NULL,
   `isRead` enum('Y','N') DEFAULT 'N',
   PRIMARY KEY (`messageID`)
-) ENGINE=MyISAM AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -245,8 +191,9 @@ CREATE TABLE `password_recovery` (
   `userID` int(11) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
   `add_date` date DEFAULT NULL,
+  `ip` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=20 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=19 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -278,22 +225,26 @@ CREATE TABLE `photo` (
   KEY `userID` (`userID`),
   KEY `slug` (`slug`),
   FULLTEXT KEY `searchindex` (`title`,`description`,`slug`,`author`)
-) ENGINE=MyISAM AUTO_INCREMENT=83 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `redirect`
+-- Table structure for table `portfolio`
 --
 
-DROP TABLE IF EXISTS `redirect`;
+DROP TABLE IF EXISTS `portfolio`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `redirect` (
-  `entryID` int(22) NOT NULL AUTO_INCREMENT,
-  `dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `URL` varchar(255) DEFAULT NULL,
-  `code` text,
-  PRIMARY KEY (`entryID`)
+CREATE TABLE `portfolio` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `dt` date DEFAULT NULL,
+  `slug` varchar(255) DEFAULT NULL,
+  `showOnSite` enum('Y','N') DEFAULT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `shortBody` text,
+  `body` text,
+  `type` varchar(50) DEFAULT 'text',
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -305,7 +256,7 @@ DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `users` (
-  `userID` int(22) NOT NULL AUTO_INCREMENT,
+  `userID` int(11) NOT NULL AUTO_INCREMENT,
   `dt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `socID` text,
   `nick` varchar(255) DEFAULT NULL,
@@ -313,11 +264,6 @@ CREATE TABLE `users` (
   `user_hash` varchar(32) NOT NULL,
   `email` varchar(255) NOT NULL,
   `social_email` varchar(100) DEFAULT NULL,
-  `gplusURL` varchar(100) DEFAULT NULL,
-  `facebookURL` varchar(100) DEFAULT NULL,
-  `twitterURL` varchar(100) DEFAULT NULL,
-  `vkURL` varchar(100) DEFAULT NULL,
-  `skype` varchar(100) DEFAULT NULL,
   `about` text NOT NULL,
   `source` varchar(20) DEFAULT 'direct',
   `ip` varchar(10) DEFAULT '0',
@@ -328,8 +274,13 @@ CREATE TABLE `users` (
   `role` varchar(50) DEFAULT NULL,
   `showEmail` enum('Y','N') DEFAULT 'N',
   `group` varchar(30) DEFAULT 'none',
+  `gplusURL` varchar(100) DEFAULT NULL,
+  `facebookURL` varchar(100) DEFAULT NULL,
+  `twitterURL` varchar(100) DEFAULT NULL,
+  `vkURL` varchar(100) DEFAULT NULL,
+  `skype` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`userID`)
-) ENGINE=MyISAM AUTO_INCREMENT=51 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=77317 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -357,7 +308,7 @@ CREATE TABLE `video` (
   `video` varchar(255) DEFAULT NULL,
   `slug` varchar(255) NOT NULL,
   PRIMARY KEY (`contentID`)
-) ENGINE=MyISAM AUTO_INCREMENT=21 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -369,4 +320,4 @@ CREATE TABLE `video` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-01-28 14:53:50
+-- Dump completed on 2015-03-30 13:51:10

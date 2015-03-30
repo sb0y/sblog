@@ -20,7 +20,7 @@ function newMailMessageClass()
 
 		$historyHolder.show ( "slow" );
 
-		$.get ( ( "/ajax/getMailHistory?senderID="+senderID+"&receiverID="+receiverID ), 
+		$.get ( ( urlBase + "ajax/getMailHistory?senderID="+senderID+"&receiverID="+receiverID ), 
 		function ( res )
 		{
 			if ( res === "" )
@@ -44,12 +44,12 @@ function newMailMessageClass()
 	function showData ( data )
 	{
 		$historyHolder.empty();
-		$historyHolder.append ( "<h2>История переписки</h2>" );
+		$historyHolder.append ( "<h2>История переписки</h2><br>" );
 		var table = document.createElement ( "table" );
 		var tbody = document.createElement ( "tbody" );
 
 		table.appendChild ( tbody );
-		table.className = "mailHistory";
+		table.className = "mailHistory table table-bordered table-striped";
 
 		for ( var i in data )
 		{
@@ -75,15 +75,41 @@ function newMailMessageClass()
 			tr.appendChild ( td2 );
 			tr.appendChild ( td3 );
 
+			var dt = new Date ( parseInt ( data [ i ].tms ) * 1000 );
+			var hours = dt.getUTCHours();
+			var minutes = dt.getUTCMinutes();
+			var day = dt.getUTCDate();
+			var seconds = dt.getUTCSeconds();
+			var mounths = dt.getUTCMonth() + 1; //January is 0!
+			var year = new String ( dt.getUTCFullYear() );
+
+			if ( day < 10 )
+			{
+    			day = '0' + day;
+			} 
+
+			if ( mounths < 10 ) 
+			{
+    			mounths = '0' + mounths;
+			} 
+
+			td3.innerHTML = hours + ":" + minutes + " <strong>" + day + "." + mounths + "." + year.substr ( 2, year.length ) + "</strong>";
+
+			td2.onclick = function()
+			{
+				window.location.href = urlBase + "user/mail/message/" + data [ i ].messageID;
+			}
+
 			var a = document.createElement ( "a" );
 			td1.appendChild ( a );
 			a.innerHTML = data[i].nick;
 			a.href = urlBase + "user/profile/" + data[i].userID;
 
-			td2.appendChild ( document.createTextNode ( data[i].body ) );
-		
-			td3.innerHTML = data[i].dtFormated;
+			if ( data [ i ].body.length >= 150 )
+				data [ i ].body = data [ i ].body.substr ( 0, 150 ) + " ...";
 
+			$( td2 ).html ( data [ i ].body );
+		
 			tbody.appendChild ( tr );
 		}
 

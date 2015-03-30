@@ -62,6 +62,7 @@ class db
 
 		$this->dbObj = new MySQLi ($this->connect_host, $this->user, $this->password, $this->database);
 		$this->dbObj->set_charset ($this->codepage);
+		$this->dbObj->use_result();
 		
 		if (mysqli_connect_errno())
 		{
@@ -79,7 +80,6 @@ class db
 	{		
 		$data["type"] = $queryType;
 		$data["time"] = $this->get_mt();
-		$data["rowsNum"] = $this->dbObj->field_count;
 		$data["realQueryTime"] = $this->lastQueryTime;
 		
 		if (isset ($this->error))
@@ -131,8 +131,17 @@ class db
 			$endtime = microtime (true);
 			$this->lastQueryTime = $endtime - $this->startTime;
 
-			$this->log (db::SUCCESS, array("query"=>$query));
-			$res = new db_result ($this->dbObj);
+			$res = new db_result ( $this->dbObj );
+
+			$infoArray = array ( "query" => $query );
+
+			if ( $res )
+			{
+				$infoArray [ "rowsNum" ] = $res->getNumRows();
+			}
+
+			$this->log ( db::SUCCESS, $infoArray );
+
 			$res->runAfterFetchAll = $this->runAfterFetchAll;
 			$res->runAfterFetch = $this->runAfterFetch;
 			return $res;
@@ -193,6 +202,9 @@ class db
 		{
 			if (!in_array($rec["type"], $show_types))
 				continue;
+
+			if ( !isset ( $rec [ "rowsNum" ] ) )
+				$rec [ "rowsNum" ] = 0;
 						
 			$out .= '<tr><td align="center">'.($n+1).'</td>';
 						
@@ -224,7 +236,9 @@ class db
 					
 					// Build query info
 					$out .= '<td><b>Query</b> : <code>'.(isset ($rec["query"])?$rec["query"]:'').'</code><br />';
-					$out .= '<b>Result</b> : <b><code style="font-weight:bold;font-size:large;">'.$rec["rowsNum"].'</code></b> rows<br /></td>';
+
+					if ( $rec [ "rowsNum" ] != -1 )
+						$out .= '<b>Result</b> : <b><code style="font-weight:bold;font-size:large;">'.$rec["rowsNum"].'</code></b> rows<br /></td>';
 				break;
 			}
 				
@@ -249,34 +263,37 @@ class db_result extends mysqli_result
             $this->free();
 	}
 
-    public function __call ($funcName, $args)
+    public function __call ( $funcName, $args )
     {
 		$navArray =& $this->$funcName;
-		$navArray2 = array_shift ($navArray);
-		
-		foreach ($args as $k=>$v)
-				$args[$k] = &$v;
+		$navArray2 = array_shift ( $navArray );
+
+		foreach ( $args as $k => $v )
+				$args [ $k ] = &$v;
 
 		$runFunc = $navArray2[0];
-		if ( count ($navArray2) > 1 )
+
+		if ( count ( $navArray2 ) > 1 )
 		{
-			$runFunc .= "::".$navArray2[1];
+			$runFunc .= "::" . $navArray2 [ 1 ];
 		}
 
-		return call_user_func_array ($runFunc, $args);
- 
+		return call_user_func_array ( $runFunc, $args );
     }
 	
 	public function fetch()
     {
         $result = $this->fetch_assoc();
-    
-		while (!empty ($this->runAfterFetch))
+
+		while ( !empty ( $this->runAfterFetch ) ) 
 		{
 			if ( !$result )
 				break;
 
-			$result = $this->runAfterFetch ( $result );
+			// вот это нужно, чтобы обработчики для одиночных запросов БД,
+			// работали так же, как и запросы выдаваемые списками
+			$result = $this->runAfterFetch ( array ( $result ) );
+			$result = array_shift ( $result );
 		}
 
         $this->availableForFree = true;
@@ -322,6 +339,9 @@ class db_result extends mysqli_result
 
 	public function getNumRows()
 	{
+		if ( !@isset ( $this->num_rows ) )
+			return -1;
+
 		return $this->num_rows;
 	}
 }

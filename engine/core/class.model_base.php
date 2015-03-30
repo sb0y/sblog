@@ -2,7 +2,7 @@
 abstract class model_base
 {
 	protected static $smarty, $db, $controllerCall = array(), $args = array(), 
-		$routePath = '', $mail = null, $get = array();
+		$routePath = '', $mail = null, $get = array(), $arg;
 	
 	//abstract public function start();
 	

@@ -82,8 +82,19 @@ class comments extends model_base
 		return $res;
 	}
 
+	public static function _url_bbcode_preg ( $m )
+	{
+		$base = system::param ( "siteDomain" );
+
+		if ( !isset ( $m[1] ) || !$m[1] )
+			return $m[0];
+
+		return "<a target=\"_blank\" href=\"http://$base/away?url=" . urlencode ( $m[1] ) . "\">{$m[2]}</a>";
+	}
+
 	public static function bbcodes ($text)
 	{
+
 		while ( preg_match ( "/\[quote(.*?)\](.*?)\[\/quote\]/ise", $text, $match ) )
 		{
 			$quoteUserName = "";
@@ -104,17 +115,19 @@ class comments extends model_base
 		}
 		
 		$bbcode = array(
-			"/\[b\](.*?)\[\/b\]/is" => "<span style=\"font-weight:bold;\">$1</span>",
-			"/\[u\](.*?)\[\/u\]/is" => "<span style=\"text-decoration:underline;\">$1</span>",
-			"/\[i\](.*?)\[\/i\]/is" => "<span style=\"font-style:italic;\">$1</span>",
-			"/\[s\](.*?)\[\/s\]/is" => "<span style=\"text-decoration:line-through;\">$1</span>",
-			"/\[url\=(.*?)\](.*?)\[\/url\]/is" => "<a href=\"$1\">$2</a>",
-			//"/\[size\=(.*?)\](.*?)\[\/size\]/is" => "<span style=\"font-size:$1;\">$2</span>",
-			"/\[color\=(.*?)\](.*?)\[\/color\]/is" => "<span style=\"color:$1;\">$2</span>",
-			"/\[code\=(.*?)\](.*?)\[\/code\]/is" => "<pre lang=$1>$2</pre>"
+			"/\[b\](.*?)\[\/b\]/uis" => "<span style=\"font-weight:bold;\">$1</span>",
+			"/\[u\](.*?)\[\/u\]/uis" => "<span style=\"text-decoration:underline;\">$1</span>",
+			"/\[i\](.*?)\[\/i\]/uis" => "<span style=\"font-style:italic;\">$1</span>",
+			"/\[s\](.*?)\[\/s\]/uis" => "<span style=\"text-decoration:line-through;\">$1</span>",
+			//"/\[url\=(.*?)\](.*?)\[\/url\]/uis" => "<a target=\"_blank\" href=\"http://$base/away?url=$1\">$2</a>",
+			//"/\[size\=(.*?)\](.*?)\[\/size\]/uis" => "<span style=\"font-size:$1;\">$2</span>",
+			"/\[color\=(.*?)\](.*?)\[\/color\]/uis" => "<span style=\"color:$1;\">$2</span>",
+			"/\[code\=(.*?)\](.*?)\[\/code\]/uis" => "<pre lang=$1>$2</pre>"
 		);
 
 		$text = preg_replace ( array_keys ( $bbcode ), array_values ( $bbcode ), $text );
+		$text = core::url2href ( $text );
+		$text = preg_replace_callback ( "/\[url\=(.*?)\](.*?)\[\/url\]/uis", array ( "comments", "_url_bbcode_preg" ), $text );
 
 		return $text;
 	}
@@ -133,34 +146,43 @@ class comments extends model_base
 		return $sqlData;
 	}
 
-	public static function add ( $contentID )
+	public static function addCommentQueue ( $contentID, $comments )
 	{
-		//echo $_POST["comment"];
+		if ( empty ( $comments ) )
+		{
+			return false;
+		}
 
-		if ( !isset ( $_SESSION["user"] ) )
+		foreach ( $comments as $key => $value ) 
+		{
+			if ( !$comments [ $key ] )
+			{
+				continue;
+			}
+
+			comments::add ( $contentID, $value );
+		}
+
+		return true;
+	}
+
+	public static function add ( $contentID, $comment = "", $replyUID = 0, $replyID = 0, $replyCommentID = 0 )
+	{
+		if ( !isset ( $_SESSION["user"] ) || !$comment )
 			return false;
 
-		$comment = comments::ex_strip_tags ($_POST["comment"]);
+		$comment = comments::ex_strip_tags ( $comment );
 		$comment = trim ( comments::bbcodes ( $comment ) );
-		$insip = isset ($_SERVER["REMOTE_ADDR"])?$_SERVER["REMOTE_ADDR"]:'';
-		$userID = intval ( $_SESSION["user"]["userID"] );
+		$insip = system::getClientIP();
+		$userID = intval ( $_SESSION [ "user" ] [ "userID" ] );
+		$replyUID = intval ( $replyUID );
+		$replyCommentID = intval ( $replyCommentID );
 
 		if ( !$comment )
 			return false;
 
-		$replyUID = 0;
 		$replyCommentID = 0;
 		$article = array();
-
-		if ( isset ( $_POST["replyUID"] ) && $_POST["replyUID"] )
-		{
-			$replyUID = intval ( $_POST["replyUID"] );
-		}
-
-		if ( isset ( $_POST["replyID"] ) && $_POST["replyID"] )
-		{
-			$replyCommentID = intval ( $_POST["replyID"] );
-		}
 
 		if ( $replyCommentID && $replyUID && $_SESSION["user"]["userID"] != $replyUID )
 		{

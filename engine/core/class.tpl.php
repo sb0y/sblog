@@ -37,6 +37,11 @@ class tpl extends Smarty
       $this->setCaching ( Smarty::CACHING_LIFETIME_SAVED );
       $this->setCacheLifetime ( 60 * 60 * 24 );
       
+      if ( defined ( "ROOT_PATH_ADM" ) )
+      {
+        $this->assign ( "urlBaseAdm", system::param ( "urlBase" ) . "adm/" );
+      }
+      
       $this->assign ( "urlBase", system::param ( "urlBase" ) );
       $this->assign ( "siteDomain", $this->compile_id );
    }
@@ -143,12 +148,16 @@ class tpl extends Smarty
 
         $this->eventHandler();
         $this->displayWrap();	
+  	  } else {
+
+  	  	echo "The page '" . TPL_PATH . '/' . $page ."' is not found.";
   	  }
+
   }
 
   public function moduleDisplay ( $page )
   {
-    $this->assign ( "mainTPL", TPL_PATH );
+		$this->assign ( "mainTPL", TPL_PATH );
 
     if ( $page )
       $this->pageName = $page;

@@ -25,26 +25,30 @@ class controller_blog extends controller_base
 	{
 		system::setParam ("page", "post");
 
-		if ( $this->args[0] != "index" )
+		if ($this->args[0] != "blog")
 		{
-			$cacheID = $this->args[0] . "|BLOGPOST";
+			$cacheID = $this->args[0]."|POST";
 			$this->smarty->setCacheID ( $cacheID );
 
-            if ( isset ( $_POST["contentID"] ) && $_POST["contentID"] )
+			if ( isset ( $_POST [ "SLUG" ] ) && isset ( $_POST [ "comment" ] ) )
 			{
-				comments::add ( intval ( $_POST["contentID"] ) );
+				blog::addCommentBySLUG ( $_POST [ "SLUG" ] );
 			}
-
-			$this->smarty->assign ( "isFav", blog::isFavorite ( $this->args[0] ) );
 
 			if ( !$this->smarty->isCached() )
 			{
-				$sqlData = blog::getOnePost ( $this->args[0] )->fetch();
+				$sqlData = blog::getOnePost ( $this->args[0] )->fetchAll();
 											
 				if ( $sqlData )
-				{					
-					$this->smarty->assign ( "comments", comments::get ( $sqlData["contentID"] ) );
-					$this->smarty->assign ( "post", $sqlData );
+				{
+					$sqlData = array_shift ( $sqlData );
+					
+					$comments = comments::get ( $sqlData [ "contentID" ] );
+					$this->smarty->assign ( "comments", $comments );
+
+					blog::highlightCode ( $sqlData [ "body" ] );
+					
+					$this->smarty->assign ( "item", $sqlData );
 				}
 			}
 		} else system::redirect ("/");
@@ -52,10 +56,9 @@ class controller_blog extends controller_base
 
 	function start()
 	{
-		
 	}
 	
-	function category() 
+	function category()
 	{
 		if ( !isset ( $this->args[1] ) )
 			system::redirect ( "/" );
@@ -82,7 +85,6 @@ class controller_blog extends controller_base
 			$catName = array_shift ( $catName["cats"] );
 			$this->smarty->assign ( "catName", $catName ["catName"] );
 		}
-		
 	}
 	
 	function date()
@@ -115,80 +117,62 @@ class controller_blog extends controller_base
 		}
 	}
 	
-	function requestModels ( &$modelsNeeded )
+	function requestModels (&$modelsNeeded)
 	{
-		$modelsNeeded = array ( "search" );
+		$modelsNeeded = array();
 	}
 
 	function search()
 	{
-		system::setParam ( "page", "search" );
+		system::setParam ("page", "search");
 
-		if ( !empty ( $_GET["text"] ) )
+		if (!empty ($_GET["text"]))
 		{
-			$words = htmlspecialchars ( addslashes ( $_GET["text"] ) );
-			$offset = 0;
+			$words = $_GET["text"];
+			$cacheID = "SEARCH_RES|$words";
 
-			if ( isset ( $this->get [ "offset" ] ) )
-				$offset = intval ( $this->get["offset"] );
+			$this->smarty->assign ("searchWord", addslashes($words));
 
-			$cacheID = "SEARCH_RES|$words|typeNews|blogsearchoffset_$offset";
-
-			$this->smarty->assign ( "searchWord", $words );
-
-			if ( mb_strlen ( $words ) <= 2 )
+			if (mb_strlen ($words) <= 2)
 			{
-				$this->smarty->assign ( "smallWord", true );
+				$this->smarty->assign ("smallWord", true);
 				return false;
 			}
 
-			$this->smarty->setCacheID ( $cacheID );
+			$this->smarty->setCacheID ($cacheID);
 
-			if ( !$this->smarty->isCached() )
+			if (!$this->smarty->isCached ("search.tpl", $cacheID))
 			{
-				$res = search::searchWithType ( $words, "news" );
+				$res = blog::search ($words);
 
-				if ( $res->getNumRows() > 0 )
+				if ($res->num_rows > 0)
 				{
 					$posts = $res->fetchAll();
-					$this->smarty->assign ( "searchRes", $posts );
+					$this->smarty->assign ("searchRes", $posts);
 				}
 			}
+
+			//this->smarty->clearCache ("main.tpl");
+			//$this->smarty->clearCache ("search.tpl");
 
 		} else system::redirect ('/');
 	}
 
 	function offset()
 	{
-		if ( !isset ( $this->args[1] ) || !$this->args[1] )
+		$offset = system::HTTPGet ( "offset" );
+
+		if ( !$offset )
 			return system::redirect ( '/' );
 
-		$cacheID = "MAINPAGE|offset_" . $this->args[1];
+		$cacheID = "MAINPAGE|offset_$offset";
 		$this->smarty->setCacheID ( $cacheID );
 
-		if ( !$this->smarty->isCached() )
+		if (!$this->smarty->isCached ( $cacheID ) )
 		{
 			$sqlData = index::mainPage();
-			$this->smarty->assign ("posts", $sqlData);
-			$this->smarty->assign ("pagination", true);
+			$this->smarty->assign ( "posts", $sqlData );
 		}
-	}
-
-	function rss()
-	{
-		system::$display = false;
-		rss::setHTTPHeaders();
-
-		$this->smarty->setCacheID ("RSS|BLOG");
-
-		if ( !$this->smarty->isCached() )
-		{
-			$sqlData = rss::getLastPostsWithType ( "news" );
-			$items = $sqlData->fetchAll();
-			$this->smarty->assign ( "items", $items );
-		}
-		
-		echo $this->smarty->fetch ( TPL_PATH . "/rss/rssMain.tpl", "RSS|BLOG" );
 	}
 
 }

@@ -1,3 +1,5 @@
+var editorSettings = {};
+
 function handlePast (pl, o)
 {
 	//o.content = o.content.replace (/\</gi,'&lt;').replace (/\>/gi,'&gt;')
@@ -12,45 +14,16 @@ function handleSubmit (ed, e)
 	//ed.setContent (txt);
 }
 
-
-$(document).on('click', '.insertVideo', function()
+$(document).ready(function() 
 {
-	tinymce.activeEditor.setContent ( tinymce.activeEditor.getContent() + $(this).prev('textarea').val() );
-});
-
-
-function addPictureByUrl ( place )
-{
-	var str = "<p>";
-	var $j = $(place.parentNode.parentNode);
-	var $img = $j.find ("img.showPic")[0];
-	var urlSmall = $img.src;
-	var a = $j.find ("a.showPicLink")[0];
-	var urlBig = a.href;
-
-	if ( urlSmall )
+	editorSettings = 
 	{
-		str += "<a class=\"fancybox\" target=\"_blank\" href=\""+urlBig+"\">";
-	}
-
-	str += "<img src=\"" + ( urlSmall ? urlSmall : urlBig ) + "\" />";
-
-	if ( urlSmall )
-		str += "</a>";
-
-	str += "</p>";
-
-	tinymce.activeEditor.setContent ( tinymce.activeEditor.getContent() + str );
-}
-
-var editorSettings = 
-{
-		script_url : urlBase+"resources/js/tiny_mce/tiny_mce.js",
+		script_url : urlBase+"resource/js/tiny_mce/tiny_mce.js",
+		width : "100%",
 		theme : "advanced",
 		plugins : "emotions,bbcode,codesnippet,paste",
 		cleanup : true,
-		theme_advanced_buttons1_add_before : "juststifyleft,justifycenter,justifyright,justifyfull",
-		theme_advanced_buttons1 : "",
+		theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,undo,redo,|,emotions,|,bullist,numlist,|,blockquote,forecolor,backcolorformatselect,fontsizeselect,link,unlink, codelight, code",
 		theme_advanced_buttons2 : "",
 		theme_advanced_buttons3 : "",
 		theme_advanced_toolbar_location : "top",
@@ -58,24 +31,25 @@ var editorSettings =
 		theme_advanced_statusbar_location : "bottom",
 		theme_advanced_resizing : true,
 		theme_advanced_resize_horizontal : false,
-		force_br_newlines : false,
-		convert_newlines_to_brs : false,
+		force_br_newlines : true,
+		convert_newlines_to_brs : true,
 		forced_root_block : '',
-		force_p_newlines : true,
 		// Skin options
         skin : "cirkuit",
 		//content_css : "/css/tinymce.css",
 		disk_cache : true,
 		language : "ru",
 		add_unload_trigger : true,
-		remove_linebreaks : false,
+		remove_linebreaks : true,
 		inline_styles : true,
 		theme_advanced_path : false,
 		convert_fonts_to_spans : true,
         convert_newlines_to_brs : false,
         object_resizing : true,
-    	paste_auto_cleanup_on_paste: true,
-		paste_convert_headers_to_strong: false,
+        force_br_newlines : true,
+    	force_p_newlines : false,
+    	paste_auto_cleanup_on_paste:true,
+		paste_convert_headers_to_strong:false,
 		paste_strip_class_attributes: "",
 		paste_remove_spans: true,
 		paste_remove_styles: true,
@@ -84,7 +58,7 @@ var editorSettings =
 			handlePast (pl, o);
 		},
 
-		setup : function ( ed ) 
+		setup : function(ed) 
 		{
       		ed.onSubmit.add(function (ed, e)
       		{
@@ -102,4 +76,10 @@ var editorSettings =
 				return;
 			});
   		}
-}
+	}
+
+
+	$(".comment-area").tinymce ( editorSettings );
+
+
+});

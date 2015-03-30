@@ -10,21 +10,22 @@ class user extends model_base
 	{			
 		if (@$_POST["password1"] != @$_POST["password2"])
 		{
-			system::registerEvent ("error", "password2", "Пароли не совпадают.", "Проверочный пароль");
-			system::registerEvent ("error", "password1", "Пароли не совпадают.", "Проверочный пароль");
+			system::registerEvent ( "error", "password2", "Пароли не совпадают", "Проверочный пароль" );
+			system::registerEvent ( "error", "password1", "Пароли не совпадают", "Проверочный пароль" );
 		}
+
+		if (! empty ( $_POST["email"] ) )
+		{
+			if ( !filter_var ( $_POST["email"], FILTER_VALIDATE_EMAIL ) )
+				system::registerEvent ("error", "email", "Адрес электронной почты введён не правильно", "e-mail");
 			
-		$usrChk = self::$db->query ("SELECT `email` FROM `users` WHERE `email`='?' AND `source`='direct'", $_POST["email"]);
+			$usrChk = self::$db->query ( 
+				"SELECT `email` FROM `users` WHERE `email`='?' AND `source`='direct'", $_POST [ "email" ] 
+			);
 			
-		if ($usrChk->num_rows > 0)
-			system::registerEvent ("error", "email", "Пользователь с таким e-mail уже существует.", "e-mail");
-			
-		if ($_POST["email"]==="0" || !empty($_POST["email"]))
-		{			
-			if (!filter_var($_POST["email"], FILTER_VALIDATE_EMAIL))
-				system::registerEvent ("error", "email", "Адрес электронной почты введён не правильно.", "e-mail");
+			if ( $usrChk->num_rows > 0 )
+				system::registerEvent ("error", "email", "Пользователь с таким e-mail уже существует", "e-mail");
 		}
-			
 			
 		self::updateSmarty();
 	}
@@ -36,9 +37,10 @@ class user extends model_base
 	
 	public static function processAvatar ($uid)
 	{
-		$imageProcessor = new image (200, 200);
-		$expectedPics = array ("avatar"=>CONTENT_PATH."/avatars/$uid");
-        $imageProcessor->handleAllUploads ($expectedPics);
+		$imageProcessor = new image ( 200, 200 );
+        system::ensureDirectory ( CONTENT_PATH."/avatars/$uid" );
+		$expectedPics = array ( "avatar" => CONTENT_PATH."/avatars/$uid" );
+        $imageProcessor->handleAllUploads ( $expectedPics );
 
         return $expectedPics;
 	}
@@ -80,8 +82,24 @@ class user extends model_base
 
 		return $code;
 	}
+
+	public static function setCookie ( $id, $data, $time )
+	{
+		// доменное имя должно держать как минимум 2 точки
+		// если сайти на локалхосте - кука не поставится
+		// поэтому такой хак
+		if ( $_SERVER [ "HTTP_HOST" ] == "localhost" )
+		{
+			$domain = false;
+		} else {
+			$domain = system::param ( "siteDomain" );
+			$domain = ".www.$domain";
+		}
+
+		return setcookie ( $id, $data, $time, '/', $domain, false );
+	}
 	
-	public static function userLogin ($userID=false, $pass=false, $method="direct")
+	public static function userLogin ( $userID=false, $pass="", $method="direct" )
 	{
 		$userID = $userID ? intval ($userID) : trim ($_POST["email"]);
 		$pass = trim ($pass ? $pass : $_POST["password"]);
@@ -92,12 +110,12 @@ class user extends model_base
 			$data = self::$db->query ("SELECT `userID`, `password` FROM `users` WHERE `email`='?' AND `source`='?' LIMIT 1", $userID, $method);
 		}
 
-		if ($data->num_rows <= 0)
+		if ( $data->num_rows <= 0 )
 			return false;
 		
 		$data = $data->fetch();
 
-		if ($data["password"] == md5(md5($pass)))
+		if ($data["password"] === md5(md5($pass)))
 		{
 			$hash = md5 (self::generateCode(10));
 			$insip = isset ($_SERVER["REMOTE_ADDR"])?$_SERVER["REMOTE_ADDR"]:'';
@@ -109,9 +127,9 @@ class user extends model_base
 				$time = time()+3600*24*365;
 			} else $time = time()+3600*24*30;
 
-			$domain = system::param ( "siteDomain" );
-			setcookie ( "id", $data["userID"], $time, '/', ".www.$domain" );
-			setcookie ( "hash", $hash, $time, '/', ".www.$domain" );
+			user::setCookie ( "id", $data [ "userID" ], $time );
+			user::setCookie ( "hash", $hash, $time );
+
 			system::$core->checkAuth ( $data["userID"], $hash );
 			
 			return true;
@@ -175,7 +193,7 @@ class user extends model_base
 				$sic["avatar_small"] = $avatar["small"];
 			}
 			
-			if ( !empty ($sic) )
+			if ( !empty ( $sic ) )
 			{
 				self::$db->updateTable ("users", $sic, "userID", $user["userID"]);
 				self::$smarty->clearCache ("userProfile.tpl");
@@ -195,6 +213,7 @@ class user extends model_base
 
 		$imageProcessor = new image (200, 200);
 		$targetPath = CONTENT_PATH."/avatars";
+        system::ensureDirectory ( $targetPath );
 		$tmpname = tempnam ($targetPath.'/', $userID);
 		
 		$ch = curl_init ($photoURL);
@@ -220,7 +239,7 @@ class user extends model_base
 		require (LIB_PATH."/hybridauth/Hybrid/Auth.php");
 		$config = LIB_PATH."/hybridauth/config.php";
 		$up = null;
-		
+
 		try  
 		{
 			$hybridauth = new Hybrid_Auth ($config);			
@@ -228,6 +247,7 @@ class user extends model_base
 			$up = $adapter->getUserProfile();
 
 		} catch( Exception $e ) {
+			//echo $e->getMessage();
 			system::registerEvent("error", "socialAuthError", "Не удалось авторизоваться через $method", "$method ответил:\n".$e->getMessage());
 		}
 
@@ -239,48 +259,66 @@ class user extends model_base
 		if ( isset ( $_SESSION["user"] ) )
 			unset ( $_SESSION["user"] );
 
-		$domain = system::param ( "siteDomain" );		 
-		setcookie ( "id", '', -1, '/', $domain );
-		setcookie ( "hash", '', -1, '/', $domain );
+		user::setCookie ( "id", "", -1 );
+		user::setCookie ( "hash", "", -1 );
 	}
 	
 	public static function processPasswordRequest()
 	{
-		system::checkFields (array ("email"=>"e-mail"));
+		system::checkFields ( array ( "email"=>"e-mail" ) );
 
-		if (isset ($_POST["email"]))
+		if ( isset ( $_GET [ "email" ] ) )
 		{
-			$_POST = array_map ("trim", $_POST);
+			$email = trim ( urldecode ( $_GET [ "email" ] ) );
+			$email = preg_replace ( "/[^a-zа-яё0-9\._\-@]/iu", '', $email );
+			self::$smarty->assign ( "fill", array ( "email" => $email ) );
+			$IP = system::getClientIP();
 			
-			if ($_POST["email"]==="0" || !filter_var($_POST["email"], FILTER_VALIDATE_EMAIL))
+			if ( $email === "0" || 
+				 !filter_var ( $email, FILTER_VALIDATE_EMAIL ) )
 			{			
 				system::registerEvent ("error", "email", "Адрес электронной почты введён не правильно.", "e-mail");
 			}
 			
-			if (!system::checkErrors())
+			if ( !system::checkErrors() )
 			{
-				$usrChk = self::$db->query ("SELECT `email`,`userID`,`nick` FROM `users` WHERE `email`='?' AND `source`='direct' LIMIT 1", $_POST["email"]);
+				$usrChk = self::$db->query ("SELECT `email`,`userID`,`nick` FROM `users` WHERE `email`='?' AND `source`='direct' LIMIT 1", $email );
 							
-				if ($usrChk->num_rows == 0)
-					system::registerEvent ("error", "email", "Пользователя с таким e-mail не существует.", "e-mail");
+				if ( !$usrChk->getNumRows() )
+					system::registerEvent ("error", "email", "Пользователя с таким e-mail не существует", "e-mail");
 			}
 
-			if (!system::checkErrors())
+			if ( !system::checkErrors() )
 			{
-				$code = self::generateCode(15);
-				$userData = $usrChk->fetch();
-				self::$db->query ("INSERT INTO `password_recovery` SET `userID`=?, `code`='?', `add_date`=NOW()", $userData["userID"], $code);
-				self::$mail->assign ("code", $code);
-				self::$mail->assign ("appeal", $userData["nick"]);
-				system::registerEvent ("mail", "passwordRequest", $_POST["email"]);
+				$retChk = self::$db->query ( 
+				"SELECT `email` FROM `password_recovery` WHERE `add_date`>=(NOW() - INTERVAL 5 MINUTE) AND " .
+				"`email`='?' AND `ip`='?'", $email, $IP );
 
-				self::$smarty->assign ("emailForSend", $_POST["email"]);
-				self::$mail->assign ("emailForSend", $_POST["email"]);
-				self::$smarty->assign ("showPassDialog", true);
+				if ( $retChk->getNumRows() > 0 )
+					system::registerEvent ( "error", "email", "Запрос на этот адрес отправлялся 5 минут назад. Подождите.", "e-mail" );
+			}
+
+			if ( !system::checkErrors() )
+			{
+				$code = self::generateCode ( 15 );
+				$userData = $usrChk->fetch();
+				self::$db->query ( "INSERT INTO `password_recovery` SET `userID`=?, `code`='?', `add_date`=NOW(), `ip`='?',`email`='?'"
+					, $userData["userID"], $code, $IP, $email );
+				self::$mail->assign ( "code", $code );
+				self::$mail->assign ( "appeal", $userData [ "nick" ] );
+				system::registerEvent ( "mail", "passwordRequest", $email );
+
+				self::$smarty->assign ( "emailForSend", $email );
+				self::$mail->assign ( "emailForSend", $email );
+				self::$smarty->assign ( "showPassDialog", true );
 
 				return true;
 			}
+
+			return false;
 		}
+
+		return false;
 	}
 
 	public static function processRequestCode ($code)
@@ -325,11 +363,15 @@ class user extends model_base
 
 		$_SESSION["user"]["mail"]["box"] = "inbox";
 
-		$cnt = self::$db->query ( "SELECT COUNT(*) as cnt FROM `messages` WHERE `receiverID`=?", $userID )->fetch();
+		$cntIn = self::$db->query ( "SELECT COUNT(*) as cnt FROM `messages` WHERE `receiverID`=?", $userID )->fetch();
 
-		self::$smarty->assign ( "totalMessagesCount", $cnt["cnt"] );
+		$cntOut = self::$db->query ( "SELECT COUNT(*) as cnt FROM `messages`,`users` WHERE `userID`=`senderID` AND `userID`=?", 
+				$userID )->fetch();
 
-		$limits = core::pagination ( $cnt["cnt"], $offset );
+		self::$smarty->assign ( "cntOut", $cntOut["cnt"] );
+		self::$smarty->assign ( "cntIn", $cntIn["cnt"] );
+
+		$limits = core::pagination ( $cntOut["cnt"], $offset );
 
 		return self::$db->query ( "SELECT * FROM `messages` as m LEFT JOIN ".
 			"`users` as u ON u.`userID`=m.`senderID` WHERE m.`receiverID`=? ORDER BY m.`dt` DESC LIMIT " . 
@@ -342,12 +384,15 @@ class user extends model_base
 
 		$_SESSION["user"]["mail"]["box"] = "outbox";
 
-		$cnt = self::$db->query ( "SELECT COUNT(*) as cnt FROM `messages`,`users` WHERE `userID`=`senderID` AND `userID`=?", 
+		$cntOut = self::$db->query ( "SELECT COUNT(*) as cnt FROM `messages`,`users` WHERE `userID`=`senderID` AND `userID`=?", 
 				$userID )->fetch();
 
-		self::$smarty->assign ( "totalMessagesCount", $cnt["cnt"] );
+		$cntIn = self::$db->query ( "SELECT COUNT(*) as cnt FROM `messages` WHERE `receiverID`=?", $userID )->fetch();
 
-		$limits = core::pagination ( $cnt["cnt"], $offset );
+		self::$smarty->assign ( "cntOut", $cntOut["cnt"] );
+		self::$smarty->assign ( "cntIn", $cntIn["cnt"] );
+
+		$limits = core::pagination ( $cntIn["cnt"], $offset );
 		
 		return self::$db->query ( "SELECT * FROM `messages` as m LEFT JOIN ".
 			"`users` as u ON u.`userID`=m.`receiverID` WHERE m.`senderID`=? ORDER BY m.`dt` DESC LIMIT " . 
@@ -474,7 +519,7 @@ class user extends model_base
 		$senderID = intval ( $senderID );
 
 		// если понадобится cделать сложные перекрёстные выборки - не забыть про парные пересечения senderID и receiverID
-		return self::$db->query ( "SELECT *, DATE_FORMAT (`dt`, '%d.%m.%y') as dtFormated, " .
+		return self::$db->query ( "SELECT *, DATE_FORMAT (`dt`, '%d.%m.%y') as dtFormated, UNIX_TIMESTAMP (`dt`) as tms, " .
 		"`receiverID` as userID, `senderID` as userID FROM `messages` WHERE " . 
 		"(`receiverID`=$receiverID AND `senderID`=$senderID) OR (`senderID`=$receiverID AND `receiverID`=$senderID) " .
 		"ORDER BY `dt` DESC" );

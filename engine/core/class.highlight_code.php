@@ -27,6 +27,7 @@ class highlight_code
 	function init (&$html)
 	{
 		$html = preg_replace_callback ('~<pre([^>]+)>(.*)</pre\s*>~Umis', array($this, 'geshi'), $html);
+		$html = preg_replace_callback ('~<code([^>]+)>(.*)</code\s*>~Umis', array($this, 'geshi'), $html);
 	}
 	
 	function geshi ($arr)
@@ -53,17 +54,21 @@ class highlight_code
 
 		if (is_null ($this->geshi))
 		{
-			$this->geshi = new geshi ($code, $lang);
+			$this->geshi = new geshi ( $code, $lang );
 			$this->geshi->enable_classes();
+			$this->geshi->set_header_type ( GESHI_HEADER_DIV ); 
 		} else {
-			$this->geshi->set_source ($code);
+			$this->geshi->set_source ( $code );
 		}
 
-		if (strpos ($code, "\n", 1) > 1)
-			$this->geshi->enable_line_numbers (GESHI_FANCY_LINE_NUMBERS, 1);
-		else $this->geshi->enable_line_numbers (GESHI_NO_LINE_NUMBERS);
+		if ( strpos ( $code, "\n", 1 ) > 1 )
+			$this->geshi->enable_line_numbers ( GESHI_FANCY_LINE_NUMBERS, 5 );
+		else $this->geshi->enable_line_numbers ( GESHI_NO_LINE_NUMBERS );
 
-		return trim ($this->geshi->parse_code());
+		$out = trim ( $this->geshi->parse_code() );
+		$out = str_replace ( "\n", '', $out );
+
+		return "<div class=\"highlightedCode\">$out</div>";
 	}
 	
 	

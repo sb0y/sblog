@@ -23,13 +23,11 @@ class controller_index extends controller_base
 {
 	function index()
 	{
-		system::setParam ("page", "posts");
-		news::buildList ("content");
 	}
 	
 	function requestModels (&$modelsNeeded)
 	{
-		$modelsNeeded = array("news");
+		$modelsNeeded = array();
 	}
 	
 	function start()

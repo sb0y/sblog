@@ -7,8 +7,8 @@ $routeOptions = array (
 		"model" => "index"
 	),
 
-	"news" => array (
-		"controller" => "news",
+	"blog" => array (
+		"controller" => "blog",
 		"action" => "index",
 		"model" => "defaultForThisControll"
 	),
@@ -43,8 +43,8 @@ $routeOptions = array (
 		"model" => "defaultForThisControll"
 	),
 
-	"video" => core::loadModule ( "video" ),
-    "article" => core::loadModule ( "article" ),
+	#"video" => core::loadModule ( "video" ),
+    #"article" => core::loadModule ( "article" ),
     "photo" => core::loadModule ( "photo" ),
 	"redirect" => core::loadModule ( "redirect" )
 );

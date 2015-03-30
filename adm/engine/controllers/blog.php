@@ -31,7 +31,30 @@ class controller_blog extends controller_base
 		
 	}
 
-	function writePost()
+	function posts()
+	{
+		switch ( system::HTTPGet ( "posts" ) )
+		{
+			case "edit":
+
+				$this->editPost();
+
+			break;
+
+			case "write":
+
+				$this->writePost();
+
+			break;
+
+			default:
+				system::setParam ( "page", "posts" );
+				blog::buildList ( "content", "blog" );
+			break;
+		}
+	}
+
+	private function writePost()
 	{
 		system::setParam ("page", "writePost");
 		blog::getAllCats();
@@ -81,8 +104,8 @@ class controller_blog extends controller_base
 		
 		$this->smarty->assign ( "fill", $fill );
 		
-		if ($doRedirect)
-			system::redirect (system::param ("urlBase")."posts");
+		if ( $doRedirect )
+			system::redirect ( "/adm/blog/posts" );
 	}
 	
 	function addNewCat()
@@ -98,14 +121,7 @@ class controller_blog extends controller_base
 		$modelsNeeded = array();
 	}
 
-	function posts()
-	{
-		system::setParam ("page", "posts");
-		//$this->smarty->setCacheID ("MAINPAGE");
-		blog::buildList ("content", "news");
-    }
-
-	function editPost()
+	private function editPost()
 	{
 		$id = intval ( $_GET["contentID"] );
 
@@ -145,14 +161,16 @@ class controller_blog extends controller_base
 				
 		blog::showAttachedPics ( $sqlData );
 
-		if ($doRedirect)
-			system::redirect (system::param ("urlBase")."posts");
+		$this->smarty->assign ( "annotationRestriction", system::param ( "annotationRestriction" ) );
+
+		if ( $doRedirect )
+			system::redirect ( "/adm/blog/posts" );
 	}
 
 	function postsWithComments()
 	{
 		system::setParam ("page", "posts");
-		blog::buildList ("content", "news", array ( "`comments_count`!=0" ) );
+		blog::buildList ("content", "blog", array ( "`comments_count`!=0" ) );
 	}
 
 	function showPostComments()
@@ -160,7 +178,7 @@ class controller_blog extends controller_base
 		$id = intval ($this->args[1]);
 		$this->smarty->assign ("contentID", $id);
 		system::setParam ("page", "commentsList");
-		blog::buildList ("comments", "news", array ( "`contentID`=$id" ) );
+		blog::buildList ("comments", "blog", array ( "`contentID`=$id" ) );
 	}
 
 	function resolveUrlById()
@@ -200,7 +218,7 @@ class controller_blog extends controller_base
 	function categories()
 	{
 		system::setParam ( "page", "categories" );
-		blog::buildList ( "categories", "news" );
+		blog::buildList ( "categories", "blog" );
 	}
 
 	function editCategory()

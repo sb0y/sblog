@@ -1,106 +1,113 @@
-{block name=title}{if isset ($post)}{$post.title}{else}Ничего не найдено по запросу: "{basename ($routePath)}"{/if}{/block}
-{block name=titleOg}{if isset ($post)}{$post.title}{/if}{/block}
-{block name=imageMeta}{if $post.poster}{$urlBase}content/photo/200x200/{$post.poster}{/if}{/block}
-{block name=imageSrc}{if $post.poster}{$urlBase}content/photo/original/{$post.poster}{/if}{/block}
-{block name=pageDesc}{$post.short}{/block}
+{extends file="main.tpl"}
+{block name=title}{if isset ($item)}{$item.title}{else}Ничего не найдено по запросу: "{basename ($routePath)}"{/if}{/block}
 {block name=pageScripts}
-    <script type="text/javascript" src="{$urlBase}resources/js/simpleEditor.js"></script>
-    <!-- Add fancyBox -->
-    <link rel="stylesheet" href="{$urlBase}resources/js/fancyBox/source/jquery.fancybox.css?v=2.1.5" type="text/css" media="screen" />
-    <script type="text/javascript" src="{$urlBase}resources/js/fancyBox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
-
-    <!-- Optionally add helpers - button, thumbnail and/or media -->
-    <link rel="stylesheet" href="{$urlBase}resources/js/fancyBox/source/helpers/jquery.fancybox-buttons.css?v=1.0.5" type="text/css" media="screen" />
-    <script type="text/javascript" src="{$urlBase}resources/js/fancyBox/source/helpers/jquery.fancybox-buttons.js?v=1.0.5"></script>
-    <script type="text/javascript" src="{$urlBase}resources/js/fancyBox/source/helpers/jquery.fancybox-media.js?v=1.0.6"></script>
-
-    <link rel="stylesheet" href="{$urlBase}resources/js/fancyBox/source/helpers/jquery.fancybox-thumbs.css?v=1.0.7" type="text/css" media="screen" />
-    <script type="text/javascript" src="{$urlBase}resources/js/fancyBox/source/helpers/jquery.fancybox-thumbs.js?v=1.0.7"></script>
-    <script type="text/javascript">
-        $(".post_image").fancybox();
-    </script>
-    <script type="text/javascript" src="{$urlBase}resources/js/favorite.js"></script>
-    <script type="text/javascript" src="{$urlBase}resources/js/commentRate.js"></script>
-    <link rel="stylesheet" href="{$urlBase}resources/css/baloons.css" type="text/css" />
-    <script type="text/javascript" src="{$urlBase}resources/js/baloons.js"></script>
-{/block}
-{block name=post_summary}
-    {if isset ($post)}
-<div class="offset_10 dark_gray horizontal_borders">
-    <span>Дата:</span> <a href="{$urlBase}{$calledController}/date/{$post.dt|date_format:"%d.%m.%Y"}">{$post.dt|date_format:"%d.%m.%Y"}</a>,
-    <span>Автор:</span> <a href="{$urlBase}user/profile/{$post.userID}">{$post.author}</a>,
-    <span>Категори{if count ( $post.cats ) > 1 }и{else}я{/if}:</span> {if isset ($post.cats)}{foreach $post.cats as $k=>$v}<a href="{$urlBase}{$calledController}/category/{$v.catSlug|urlencode}">{$v.catName}</a>{if !$v@last},&nbsp;{/if}{/foreach}{/if}
-    <a class="pull_right addToFavorite {$post.type}{if $isFav nocache} active{/if}" id="{$post.contentID}" href="javascript:;" title="Добавить в избранное">★</a>
-</div>  
-    {/if}
+    <script src="{$urlBase}resource/js/tiny_mce/jquery.tinymce.js"></script>
+    <script type="text/javascript" src="{$urlBase}resources/js/weditor.js"></script>
+    <link rel="stylesheet" href="{$urlBase}resources/css/geshi.css" type="text/css" media="all" />
 {/block}
 {block name=body}
-
-	{if isset ($post)}
-            <article>
-                <div class="row post" id="post_{$post.contentID}">
-                	<div class="col span_12">
-	                    <h1>{$post.title}</h1>
-		                    	
-	                    <div class="content">
-                            {if $post.poster} {* пустая ли строка с данными о постере? *}
-                                <a class="pull_left post_image" target="_blank" class="fancybox" href="{$urlBase}content/photo/resized/{$post.poster}"><img alt="post-image1" class="width-auto" src="{$urlBase}content/photo/200x200/{$post.poster}"/></a>
-                            {/if}
-
-							{$post.body}
-	                    </div>
-                        <p class="alert danger">
-                            Перепечатка данного материала возможна при условии сохранения всех ссылок внутри текста и наличии активной и индексируемой ссылки на <b>9kg.me</b> как источник статьи.
-                        </p>
-                    </div>
-                   
+<div class="posts-list post"> 
+	{if isset ($item)}
+            <article> 
+                <div class="page-header">
+                   <h1>{$item.title}</h1>
                 </div>
-            </article>
-            <div class="comments">
-                <ul class="comments">
-                    {if isset ($comments)}
-                    {include file="includes/comments.tpl"}
+
+                <ul class="nav nav-pills">
+                    <li title="Дата написания статьи">
+                        <a href="{$urlBase}blog/date/{$item.dt|date_format:"%d.%m.%Y"}"><span class="glyphicon glyphicon-time"></span>&nbsp;{$item.dt|date_format:"%d.%m.%Y"}</a>
+                    </li>
+                    <li title="Автор статьи"><a href="{$urlBase}user/profile/{$item.userID}"><span class="glyphicon glyphicon-user"></span>&nbsp;Sb0y</a></li>
+                    {if count($item.cats) > 1}
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                          Категории <span class="caret"></span>
+                        </a>
+                    </li>
+                    <ul class="dropdown-menu">
+                    {foreach $item.cats as $k=>$v}
+                        <li><a href="{$urlBase}blog/category/{$v.catSlug|urlencode}">{$v.catName}</a></li>
+                    {/foreach}
+                    </ul>
+                    {elseif !empty ( $item.cats )}
+                    {foreach $item.cats as $k=>$v}
+                        {if $v@first}
+                            <li title="Категории статьи"><a href="{$urlBase}blog/category/{$v.catSlug|urlencode}"><span class="glyphicon glyphicon-tag"></span>&nbsp;{$v.catName}</a></li>
+                        {/if}
+                    {/foreach}
                     {/if}
                 </ul>
-                <form id="commentForm" method="post">
-                    <div style="display:none;" id="quote_ID_placeholder"></div>
-                    <div style="display:none;" id="reply_ID_placeholder"></div>
-                    <input type="hidden" value="{$post.contentID}" name="contentID" />
-                    {if isset ($smarty.session.user) nocache}
-                    <div class="row borders_comment">
-                        <div class="col span_1 user-info">
-                            <a href="{$urlBase}user/profile/{$smarty.session.user.userID}" title="{$smarty.session.user.nick}" alt="{$smarty.session.user.nick}"><div class="avatar_block" style="background: url({if isset ($smarty.session.user.avatar_small)}{$urlBase}content/avatars/{$smarty.session.user.avatar_small}{else}{$urlBase}resources/images/no-avatar-small.png{/if}) no-repeat top center;"></div></a>
-                            {if $smarty.session.user.group!="none"}<div class="groupIcon"><img src="{$urlBase}resources/images/group-icons/{$smarty.session.user.group}.gif" title="{$smarty.session.user.group} group" alt="{$smarty.session.user.group} group" /></div>{/if}
-                        </div>
-                        <div class="col span_11 post-data">
-                            <div class="offset_10">
-                                <p class="lh16"><a class="{if $smarty.session.user.source!="direct"} {$smarty.session.user.source}{/if}" href="{$urlBase}user/profile/{$smarty.session.user.userID}">{if isset($smarty.session.user)}{$smarty.session.user.nick}{/if}</a><a class="pull_right" href="{$urlBase}user/logout">Выход</a></p>
-                                <div id="comment-textarea">
-                                    <div class="panel_form" style="background: #eaecea; margin-top: 2px;" id="form_buttons">
-                                        <a href="javascript:;" id="insertBold" class="button"><img src="{$urlBase}resources/images/text-icons/bold.png" width="20" height="20" title="жирный"></a>
-                                        <a href="javascript:;" id="insertItalic" class="button"><img src="{$urlBase}resources/images/text-icons/italic.png" width="20" height="20" title="курсив"></a>
-                                        <a href="javascript:;" id="insertUnderline" class="button"><img src="{$urlBase}resources/images/text-icons/underline.png" width="20" height="20" title="подчеркнутый"></a>
-                                        <a href="javascript:;" id="insertStrike" class="button"><img src="{$urlBase}resources/images/text-icons/strike.png" width="20" height="20" title="зачеркнутый"></a>
-                                        &nbsp;
-                                        <a href="javascript:;" id="insertLink" class="button"><img src="{$urlBase}resources/images/text-icons/link.png" width="20" height="20" title="вставить ссылку"></a>
-                                        <a href="javascript:;" id="insertBlockquote" class="button"><img src="{$urlBase}resources/images/text-icons/quote.png" width="20" height="20" title="цитировать выделенный текст"></a>
+      
+                {if isset ($item.img)}
+                <div class="post-image">
+                    <img alt="post-image1" class="width-auto" src="{$urlBase}resource/images/post-image.png"/>
+                </div>
+                {/if}
+                <hr>
+                <div class="content">
+                    {$item.body}
+                </div>
+            </article>
+
+            <br><hr>
+            <!-- Posted Comments -->
+
+            <div class="comments">
+            {foreach $comments as $k=>$v}
+                <!-- Comment -->
+                <div class="media" id="comment_{$v.commentID}">
+
+                    <a class="pull-left" href="{if $v.source!="direct"}{$v.profileURL}{/if}">
+                        {if isset ($v.avatar_small)}<img style="width:64px;" src="{$urlBase}content/avatars/{$v.avatar_small}" class="media-object img-responsive img-thumbnail" title="{$v.nick}" alt="{$v.nick}" />{else}<img alt="Нет аватара" style="width:64px;" title="Нет аватара" src="{$urlBase}resources/images/no-avatar-small.png" class="media-object img-responsive img-thumbnail" />{/if}
+                    </a>
+
+                    <div class="media-body">
+                        <h4 class="media-heading">
+                            <a{if $v.source!="direct"} class="{$v.source}" rel="nofollow" target="_blank"{/if} href="{if $v.source!="direct"}{$v.profileURL}{/if}">{$v.author}</a>
+                            <small>{$v.dt|date_format:"%d"} {$v.dt|month_declination} в {$v.dt|date_format:"%H:%M"}&nbsp;<a href="{$urlBase}blog/{$item.slug|urlencode}/#comment_{$v.commentID}" title="Ссылка на комментарий">#</a></small>
+                        </h4>
+                        {$v.body|nl2p}
+                    </div>
+
+                 </div>
+            {foreachelse}
+                <div class="alert alert-dismissible alert-info">
+                   Статью пока никто не комментировал. Ваш комментарий может стать первым.
+                </div>
+            {/foreach}
+
+            {if isset ($smarty.session.user) nocache}
+            <hr>
+            <div class="well">
+                <h4>Написать комментарий</h4>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div id="comment-textarea">
+                            <form method="post" role="form">
+                                <input type="hidden" value="{if $args}{$args[0]}{/if}" name="SLUG">
+                                <div class="form-group">
+                                	<div class="hidden-xs">
+                                    	<textarea name="comment[]" class="comment-area form-control" rows="3" tabindex="4"></textarea>
                                     </div>
-                                    <textarea name="comment" class="comment-area" placeholder="Введите Ваше сообщение..." tabindex="4"></textarea>
-                                    <div id="replyTo" class="date offset_5"></div>
-                                    <div class="submit comment-submit">
-                                        <button type="submit" class="submit btn info">Отправить</button>
+                                    <div class="visible-xs">
+                                    	<textarea name="comment[]" class="form-control" rows="3" tabindex="4"></textarea>
                                     </div>
                                 </div>
-                            </div> 
+                                <button type="submit" class="btn btn-primary">Отправить</button>
+                            </form>
                         </div>
-                    </div>
-                        
-                    {else}
-                        <p class="alert info"><a href="javascript:;" class="loginButton">Войдите</a> или <a target="_blank" href="{$urlBase}user/registration">зарегистрируйтесь</a>, чтобы написать комментарий.</p>
-                    {/if}
-                </form>
+                </div>
+                </div>
+            </div>
+            {else}
+            <br />
+            <div class="well well-lg">
+                <a href="javascript:;" class="loginButton">Войдите</a> или <a target="_blank" href="{$urlBase}user/registration">зарегистрируйтесь</a>, чтобы написать комментарий.
+            </div>
+            {/if}
      </div>
      {else}
 		<p>По вашему запросу ничего не найдено.</p>
      {/if}
+</div>
 {/block}

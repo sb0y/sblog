@@ -1,52 +1,75 @@
-{extends file="main.tpl"}
 {block name=title}Восстановление пароля{/block}
 {block name=body}
-<div class="posts-list post">
-	<p><h2>Забыли пароль?</h2></p>
-	{nocache}
-	{if !isset ($showPassDialog) && !isset($code)}
-	<p>Введите e-mail, указанный при регистрации на сайте.</p>
-	<form id="passwordRequestForm" method="post" name="passwordRequestForm">
-		{if !isset ($fill)}
-		{assign var=fill value=array()}
+<div class="passwordRestore">
+		<h1>Забыли пароль?</h1>
+		{if !isset ($showPassDialog) && !isset($code) nocache}
+		<p>Введите E-mail, указанный при регистрации на сайте.</p>
+		<form role="form" id="passwordRequestForm" method="GET" name="passwordRequestForm">
+			<div class="form-group{if isset ($errors.email)} has-error{/if}">
+	    		<label for="inputEmail" class="control-label"><span class="text-danger">*</span>&nbsp;E-mail</label>
+	      		<input type="email" class="form-control" id="inputEmail" placeholder="Введите E-mail" name="email" value="{fromPost var='email' arr=$fill}" />
+	    		{if isset ($errors.email)}
+	    			<span class="help-block help-danger">
+	    				{$errors.email.txt}
+	    			</span>
+	    		{/if}
+	  		</div>
+			<div class="form-group">
+			    <div class="req-wrap">
+					<div class="field required"><span class="text-danger">*</span>&nbsp;&#151; обязательное поле</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<button type="submit" class="btn btn-default">Напомнить</button>
+			</div>
+		</form>
+		{elseif isset ( $code )}
+		{if !isset ($errors.form)}
+		<p>Введите Ваш новый пароль</p>
+		<form role="form" id="newPasswordSetForm" method="POST" name="newPasswordSetForm">
+			<div class="form-group{if isset ($errors.password1)} has-error{/if}">
+				<label class="control-label" for="password1"><span class="text-danger">*</span>&nbsp;Пароль</label>
+				<input type="password" class="form-control" placeholder="Новый пароль" name="password1" value="" />
+				{if isset ($errors.password1)}
+					<span class="help-block help-danger">
+	    				{$errors.password1.txt}
+	    			</span>
+	    		{/if}
+			</div>
+			<div class="form-group{if isset ($errors.password2)} has-error{/if}">
+				<label class="control-label" for="password2"><span class="text-danger">*</span>&nbsp;Пароль ещё раз</label>
+				<input type="password" name="password2" class="form-control" placeholder="Новый пароль ещё раз" value="" />
+				{if isset ($errors.password2)}
+					<span class="help-block help-danger">
+	    				{$errors.password2.txt}
+	    			</span>
+	    		{/if}
+			</div>
+				
+			<div class="form-group">
+			    <div class="req-wrap">
+					<div class="field required"><span class="text-danger">*</span>&nbsp;&#151; обязательное поле</div>
+				</div>
+			</div>
+					
+			<div class="form-group">
+				<button type="submit" class="btn btn-default">Сохранить</button>
+			</div>
+		</form>
+		{else}
+		<br />
+		<div class="panel panel-danger">
+ 			<div class="panel-heading">
+				<h3 class="panel-title">Ошибка!</h3>
+			</div>
+			<div class="panel-body">
+				Ваш запрос не найден в системе или был просрочен.
+			</div>
+		</div>
 		{/if}
-		<div class="inputs">
-		<div class="field"><label>E-mail</label><span class="red">*</span><br /><input type="text"{if isset ($errors.email)} class="error"{/if} name="email" value="{fromPost var='email' arr=$fill}" />{if isset ($errors.email)}<div class="errorExplain">{$errors.email.txt}</div>{/if}
-		</div>
-		
-		<div class="req-wrap">
-			<div class="field required"><span class="red">*</span>&nbsp;&#151; обязательное поле</div>
-		</div>
-			
-		<div class="field submit">
-			<button type="submit">Отправить</button>
-		</div>
-		</div>
-	</form>
-	{elseif isset ($code)}
-	{if isset ($passwordReady)}
-	<p>Введите Ваш новый пароль.</p>
-	<form id="newPasswordSetForm" method="post" name="newPasswordSetForm">
-	<div class="inputs">
-		<div class="field"><label>Пароль</label><span class="red">*</span><br /><input type="password"{if isset ($errors.password1)} class="error"{/if} name="password1" value="" />{if isset ($errors.password1)}<div class="errorExplain">{$errors.password1.txt}</div>{/if}</div>
-		<div class="field"><label>Пароль ещё раз</label><span class="red">*</span><br /><input type="password"{if isset ($errors.password2)} class="error"{/if} name="password2" value="" />{if isset ($errors.password2)}<div class="errorExplain">{$errors.password2.txt}</div>{/if}</div>
-		
-		<div class="req-wrap">
-			<div class="field required"><span class="red">*</span>&nbsp;&#151; обязательное поле</div>
-		</div>
-			
-		<div class="field submit">
-			<button type="submit">Отправить</button>
-		</div>
-	</div>
-	</form>
-	{else}
-	<p>Ваш запрос не найден в системе или был просрочен.</p>
-	{/if}
-	{else}
-	<p>На электронный почтовый адрес <span class="strong">{$emailForSend}</span> выслано сообщение.</p>
-	<p>Пожайлуста, проверьте Вашу почту.</p>
-	{/if}
-	{/nocache}
+		{else}
+		<p>На электронный почтовый адрес <strong>{$emailForSend}</strong> выслано сообщение.</p>
+		<p>Пожайлуста, проверьте Вашу почту.</p>
+		{/if}
 </div>
 {/block}

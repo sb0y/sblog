@@ -22,7 +22,7 @@ function select()
 	this.selRow = function (row)
 	{
 		$(row).toggleClass ("selected");
-		var id = row.id;
+		var id = row.getAttribute ( "data-userid" );
 		var selected = selectHolder.find ("input#"+id);
 
 		if (selected.length <= 0)

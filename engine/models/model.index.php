@@ -3,7 +3,7 @@ class index extends model_base
 {
 	public static function start()
 	{
-		self::$smarty->runBeforeDisplay[] = array ("index", "::", "loadCatsMenu");
+		//self::$smarty->runBeforeDisplay[] = array ("index", "::", "loadCatsMenu");
 	}
 
 	public static function loadCatsMenu()

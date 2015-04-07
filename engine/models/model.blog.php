@@ -310,9 +310,9 @@ class blog extends model_base
 
 		self::$highlightWords = str_replace (" ", "|", $query);
 
-		$res = self::$db->query ("SELECT *, co.`contentID`, cc.`catID`, MATCH (`title`,`body`,`author`) AGAINST ('?') as rel
+		$res = self::$db->query ("SELECT *, co.`contentID`, cc.`catID`, MATCH (`title`,`body`,`author`,`slug`) AGAINST ('?') as rel
 			FROM `content` as co JOIN `content_category` as cc INNER JOIN `categories` as c ON c.`categoryID`=cc.`catID` AND cc.`contentID`=co.`contentID`
-			WHERE MATCH (`title`,`body`,`author`) AGAINST ('?') > 0", $query, $query);
+			WHERE MATCH (`title`,`body`,`author`,`slug`) AGAINST ('?') > 0", $query, $query);
 
 		$res->runAfterFetchAll[] = array("blog", "buildCatsArray");
 		$res->runAfterFetchAll[] = array("blog", "arrayUnique");

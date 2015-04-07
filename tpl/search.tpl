@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Поиск по фразе "{$searchWord}"{/block}
 {block name=body}
 <div class="posts-list post">

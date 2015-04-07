@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Авторизация{/block}
 {block name=pageScripts}{/block}
 {block name=body}
@@ -36,10 +37,10 @@
 				<div class="col-sm-offset-2 col-sm-10">
 					<hr>
 					<ul class="socials" style="padding:0;margin:0;">
-			            <li class="vkontakte"><a href="{$urlBase}user/login/through/vkontakte?to={$routePath|urlencode nocache}"> Войти через ВКонтакте</a></li>
-			            <li class="twitter"><a href="{$urlBase}user/login/through/twitter?to={$routePath|urlencode nocache}"> Войти через Twitter</a></li>
-			            <li class="facebook"><a href="{$urlBase}user/login/through/facebook?to={$routePath|urlencode nocache}"> Войти через Facebook</a></li>
-			            <li class="google"><a href="{$urlBase}user/login/through/google?to={$routePath|urlencode nocache}"> Войти через Google Plus</a></li>
+			            <li class="vkontakte"><a href="{$urlBase}user/login/through/vkontakte?to={if isset($smarty.get.to) && $smarty.get.to nocache}{$smarty.get.to}{else}{$routePath|urlencode}{/if}"> Войти через ВКонтакте</a></li>
+			            <li class="twitter"><a href="{$urlBase}user/login/through/twitter?to={if isset($smarty.get.to) && $smarty.get.to nocache}{$smarty.get.to}{else}{$routePath|urlencode}{/if}"> Войти через Twitter</a></li>
+			            <li class="facebook"><a href="{$urlBase}user/login/through/facebook?to={if isset($smarty.get.to) && $smarty.get.to nocache}{$smarty.get.to}{else}{$routePath|urlencode}{/if}"> Войти через Facebook</a></li>
+			            <li class="google"><a href="{$urlBase}user/login/through/google?to={if isset($smarty.get.to) && $smarty.get.to nocache}{$smarty.get.to}{else}{$routePath|urlencode}{/if}"> Войти через Google Plus</a></li>
 			        </ul>
 				</div>
 			</div>

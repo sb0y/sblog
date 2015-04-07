@@ -192,6 +192,14 @@ class system
 		return "";
 	}
 
+	public static function HTTPArg ( $index )
+	{
+		if ( isset ( self::$core->args [ $index ] ) && self::$core->args [ $index ] )
+			return self::$core->args [ $index ];
+
+		return "";
+	}
+
 	public static function ensureDirectory ( $dir )
     {
         $ret = 1;

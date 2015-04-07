@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Все записи от {$date}{/block}
 {block name=body}
  <div class="blogByDate">

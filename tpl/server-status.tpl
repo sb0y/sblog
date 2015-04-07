@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Статистика сервера{/block}
 {block name=pageScripts}
 <script type="text/javascript" src="{$urlBase}resource/js/sort.js"></script>

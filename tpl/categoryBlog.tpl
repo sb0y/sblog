@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Все записи по категории "{$catName}"{/block}
 {block name=body}
 <div class="blogByCat">

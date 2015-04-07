@@ -24,7 +24,7 @@
         <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-    <link rel="shortcut icon" href="{$urlBase}resource/images/favicon.ico" />
+    <link rel="shortcut icon" href="{$urlBase}resources/images/favicon.ico" />
     <link rel="alternate" type="application/rss+xml" title="Bagrintsev blog" href="{$urlBase}rss/" />
     <link rel="apple-touch-icon" href="{$urlBase}resource/images/apple-touch-icon.png" />
     <link rel="apple-touch-icon" sizes="72x72" href="{$urlBase}resource/images/apple-touch-icon-72x72.png" />
@@ -87,7 +87,7 @@
                     </li>
                     <li class="dropdown">
                         <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="services" aria-expanded="false">Сервисы <span class="caret"></span></a>
-                        <ul class="dropdown-menu" aria-labelledby="download">
+                        <ul class="dropdown-menu" aria-labelledby="services">
                             <li><a href="#">Тут пока пусто =)</a></li>
                         </ul>
                     </li>
@@ -206,7 +206,7 @@
         </div>
         <!-- /.row -->
 
-        <hr />
+        <hr>
 
         <!-- Footer -->
         <footer>

@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Регистрация пользователя{/block}
 {block name=body}
 <div class="userRegistration">

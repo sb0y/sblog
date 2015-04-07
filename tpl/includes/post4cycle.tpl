@@ -1,4 +1,5 @@
 <div class="post col-lg-13" id="post_{$item.contentID}">
+    <article>
 	<h2><a href="{$urlBase}blog/{$item.slug|urlencode}">{$item.title}</a></h2>
                 <ul class="nav nav-pills">
                     <li title="Дата написания статьи">
@@ -25,13 +26,12 @@
                     {/if}
                 </ul>
 
-	<hr />
+	<hr>
 	<div class="content">
-		<article>
 			{if $item.short}{$item.short|nl2br}{else}{$item.body|nl2br}{/if}
-		</article>
 	</div>
 	<div class="post-read-more">
 		<a class="btn btn-primary" href="{$urlBase}blog/{$item.slug|urlencode}">Читать дальше</a>
 	</div>
+    </article>
 </div>

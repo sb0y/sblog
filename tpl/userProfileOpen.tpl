@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}{if $user}Профиль пользователя {$user.nick}{else}Несуществующий профиль{/if}{/block}
 {block name=pageScripts}
 {*<link rel="stylesheet" href="{$urlBase}resources/image-gallery/css/blueimp-gallery.min.css" />

@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Личные сообщения пользователя {$smarty.session.user.nick}{/block}
 {block name=post_summary}
 <div class="offset_10 dark_gray horizontal_borders">

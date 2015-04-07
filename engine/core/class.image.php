@@ -108,6 +108,7 @@ class image
 		}
 						
 		imagedestroy ( $resource );
+		imagedestroy ( $source );
 		
 		if ( $isOk )
 			return $outFile;
@@ -120,7 +121,7 @@ class image
 
 		if ( $outFile )
 		{
-			$this->currentImgInfo["file"] = $outFile;
+			$this->currentImgInfo [ "file" ] = $outFile;
 		}
 
 		if ( !$this->currentImgInfo )
@@ -136,7 +137,7 @@ class image
 
 		if ( isset ( $this->additionalProcessing ) && isset ( $this->additionalProcessing[$imgID] ) )
 		{
-			foreach ( $this->additionalProcessing[$imgID] as $k=>$v )
+			foreach ( $this->additionalProcessing [ $imgID ] as $k=>$v )
 			{
 				$this->width = $v["sizes"][0];
 				$this->height = $v["sizes"][1];
@@ -179,22 +180,22 @@ class image
 	
 	function handleAllUploads ( array &$outNames )
 	{
-		if (empty ($_FILES))
+		if ( empty ( $_FILES ) )
 			return false;
 		
-		foreach ( $_FILES as $k=>$v )
+		foreach ( $_FILES as $k => $v )
 		{
-			if ( !isset ( $outNames[$k] ) || $v["error"] !== 0 )
+			if ( !isset ( $outNames [ $k ] ) || $v [ "error" ] !== 0 )
 				continue;
 				
-			$this->currentImgInfo["file"] =& $outNames[$k];
+			$this->currentImgInfo [ "file" ] =& $outNames [ $k ];
 			
-			if ( is_uploaded_file ( $v["tmp_name"] ) )
+			if ( is_uploaded_file ( $v [ "tmp_name" ] ) )
 			{
-				if ( $this->extendFormat ( $v["tmp_name"] ) )
+				if ( $this->extendFormat ( $v [ "tmp_name" ] ) )
 				{
-					$this->currentImgInfo["file"] = $this->processImage ( $v["tmp_name"], false, $k );
-					$outNames[$k] = $this->currentImgInfo["file"];
+					$this->currentImgInfo [ "file" ] = $this->processImage ( $v [ "tmp_name" ], false, $k );
+					$outNames [ $k ] = $this->currentImgInfo [ "file" ];
 				}
 				
 			} else {

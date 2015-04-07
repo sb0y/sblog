@@ -11,7 +11,7 @@
 
 return 
 	array(
-		"base_url" => "http://" . system::param ( "siteDomain" ) . "/engine/libs/hybridauth/",
+        "base_url" => "http://" . system::param ( "siteDomain" ) . "/engine/libs/hybridauth/",
 
 		"providers" => array ( 
 			// openid providers

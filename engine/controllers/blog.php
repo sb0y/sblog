@@ -124,38 +124,38 @@ class controller_blog extends controller_base
 
 	function search()
 	{
-		system::setParam ("page", "search");
+		system::setParam ( "page", "search" );
 
-		if (!empty ($_GET["text"]))
+		if ( !empty ( $_GET [ "text" ] ) )
 		{
-			$words = $_GET["text"];
+			$words = $_GET [ "text" ];
 			$cacheID = "SEARCH_RES|$words";
 
-			$this->smarty->assign ("searchWord", addslashes($words));
+			$this->smarty->assign ( "searchWord", addslashes ( $words ) );
 
-			if (mb_strlen ($words) <= 2)
+			if ( mb_strlen ( $words ) <= 2 )
 			{
-				$this->smarty->assign ("smallWord", true);
+				$this->smarty->assign ( "smallWord", true );
 				return false;
 			}
 
-			$this->smarty->setCacheID ($cacheID);
+			$this->smarty->setCacheID ( $cacheID );
 
-			if (!$this->smarty->isCached ("search.tpl", $cacheID))
+			if ( !$this->smarty->isCached() )
 			{
-				$res = blog::search ($words);
+				$res = blog::search ( $words );
 
-				if ($res->num_rows > 0)
+				if ( $res->num_rows > 0 )
 				{
 					$posts = $res->fetchAll();
-					$this->smarty->assign ("searchRes", $posts);
+					$this->smarty->assign ( "searchRes", $posts );
 				}
 			}
 
 			//this->smarty->clearCache ("main.tpl");
 			//$this->smarty->clearCache ("search.tpl");
 
-		} else system::redirect ('/');
+		} else system::redirect ( '/' );
 	}
 
 	function offset()

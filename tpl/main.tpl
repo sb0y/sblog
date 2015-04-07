@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=body}
 <div class="posts-list">
     {foreach $posts as $key=>$item}

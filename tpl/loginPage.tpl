@@ -1,4 +1,4 @@
-{extends file="main.tpl"}
+{extends file="base.tpl"}
 {block name=title}Страница авторизации{/block}
 {block name=body}
 <div class="posts-list post">

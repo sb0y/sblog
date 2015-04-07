@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Восстановление пароля{/block}
 {block name=body}
 <div class="passwordRestore">

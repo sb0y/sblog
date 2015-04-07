@@ -38,22 +38,22 @@ class user extends model_base
 	public static function processAvatar ($uid)
 	{
 		$imageProcessor = new image ( 200, 200 );
-        system::ensureDirectory ( CONTENT_PATH."/avatars/$uid" );
+		system::ensureDirectory ( CONTENT_PATH."/avatars/$uid" );
 		$expectedPics = array ( "avatar" => CONTENT_PATH."/avatars/$uid" );
-        $imageProcessor->handleAllUploads ( $expectedPics );
+		$imageProcessor->handleAllUploads ( $expectedPics );
 
-        return $expectedPics;
+		return $expectedPics;
 	}
 
 	public static function registerNewUser()
 	{
 		$input = array_map ("trim", $_POST);
 		
-        $password = md5(md5($input["password1"]));
-        $email = htmlspecialchars($input["email"]);
-        $nick = htmlspecialchars ($input["nick"]);
-        
-        self::$db->query ("INSERT INTO `users` SET `password`='?', `email`='?', `nick`='?', `source`='direct'", $password, $email, $nick);
+		$password = md5(md5($input["password1"]));
+		$email = htmlspecialchars($input["email"]);
+		$nick = htmlspecialchars ($input["nick"]);
+		
+		self::$db->query ("INSERT INTO `users` SET `password`='?', `email`='?', `nick`='?', `source`='direct'", $password, $email, $nick);
 		self::$smarty->assign ("successReg", "ok");
 		system::registerEvent ("mail", "successUserReg", $email);
 		$uid = self::$db->insert_id();
@@ -62,8 +62,8 @@ class user extends model_base
 		{
 			$expectedPics = self::processAvatar ($uid);
 
-        	self::$db->query ("UPDATE `users` SET `avatar`='?', `avatar_small`='?' WHERE `userID`=?", $expectedPics["avatar"]["big"], 
-        		$expectedPics["avatar"]["small"], $uid);
+			self::$db->query ("UPDATE `users` SET `avatar`='?', `avatar_small`='?' WHERE `userID`=?", $expectedPics["avatar"]["big"], 
+				$expectedPics["avatar"]["small"], $uid);
 		}
 
 		return array ($uid, trim ($_POST["password1"]));
@@ -213,7 +213,7 @@ class user extends model_base
 
 		$imageProcessor = new image (200, 200);
 		$targetPath = CONTENT_PATH."/avatars";
-        system::ensureDirectory ( $targetPath );
+		system::ensureDirectory ( $targetPath );
 		$tmpname = tempnam ($targetPath.'/', $userID);
 		
 		$ch = curl_init ($photoURL);
@@ -302,8 +302,10 @@ class user extends model_base
 			{
 				$code = self::generateCode ( 15 );
 				$userData = $usrChk->fetch();
-				self::$db->query ( "INSERT INTO `password_recovery` SET `userID`=?, `code`='?', `add_date`=NOW(), `ip`='?',`email`='?'"
-					, $userData["userID"], $code, $IP, $email );
+				
+				self::$db->query ( "INSERT INTO `password_recovery` SET `userID`=?, `code`='?', `add_date`=NOW(), `ip`='?',`email`='?'", 
+					$userData["userID"], $code, $IP, $email );
+
 				self::$mail->assign ( "code", $code );
 				self::$mail->assign ( "appeal", $userData [ "nick" ] );
 				system::registerEvent ( "mail", "passwordRequest", $email );

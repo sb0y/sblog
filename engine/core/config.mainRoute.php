@@ -45,6 +45,7 @@ $routeOptions = array (
 
 	#"video" => core::loadModule ( "video" ),
     #"article" => core::loadModule ( "article" ),
+    "screenshot" => core::loadModule ( "screenshot" ),
     "photo" => core::loadModule ( "photo" ),
 	"redirect" => core::loadModule ( "redirect" )
 );

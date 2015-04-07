@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Личное сообщение от {$mail.nick}{/block}
 {block name=pageScripts}
 <script type="text/javascript" src="{$urlBase}resources/js/newMessage.js?v=2"></script>

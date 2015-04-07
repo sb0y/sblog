@@ -4,7 +4,7 @@
 {/block}
 {block name=body}
 <div class="posts">
-<h1 class="page-header">Пользователи</h1>
+<h1 class="page-header">Посты</h1>
 <div class="panel panel-default">
 	<div class="panel-body">
 		<p>

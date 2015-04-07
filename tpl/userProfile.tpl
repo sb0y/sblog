@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Панель управления профилем{/block}
 {block name=body}
 <div class="userProfile">

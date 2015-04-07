@@ -23,14 +23,16 @@ class controller_index extends controller_base
 {
 	function index()
 	{
-		if ($this->args[0] == "index")
+		if ( $this->args[0] == "index" )
 		{
-			$this->smarty->setCacheID ("MAINPAGE|offset_0");
-			if (!$this->smarty->isCached ("main.tpl", "MAINPAGE|offset_0"))
+			$this->smarty->setCacheID ( "MAINPAGE|offset_0" );
+
+			if ( !$this->smarty->isCached() )
 			{
 				$sqlData = index::mainPage();
 				$this->smarty->assign ( "posts", $sqlData );
 			}
+			
 		} else {
 			system::setParam ( "page", "static/" . $this->args[0] );
 		}

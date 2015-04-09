@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Перенаправление на страницу "{$url nocache}"{/block}
 {block name=body}
 <div class="block">

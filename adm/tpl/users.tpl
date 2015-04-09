@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Список всех пользователей{/block}
 {block name=pageScripts}
 <script type="text/javascript" src="{$urlBaseAdm}resources/js/lists.js"></script>

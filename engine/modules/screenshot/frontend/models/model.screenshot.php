@@ -52,14 +52,18 @@ class screenshot extends model_base
 			$isOk = false;
 		}
 
-		// Set the content type header - in this case image/png
-		header ( "Content-Type: image/png" );
+		// Enable output buffering
+		ob_start();
 
 		imagepng ( $resource, NULL, 7 );
+		// Capture the output
+		$imagedata = ob_get_contents();
+		// Clear the output buffer
+		ob_end_clean();
 
 		imagedestroy ( $resource );
 		imagedestroy ( $source );
 
-		return $isOk;
+		return "data:image/png;base64, " . base64_encode (  $imagedata );
 	}
 }

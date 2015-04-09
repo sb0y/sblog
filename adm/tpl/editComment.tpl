@@ -1,4 +1,4 @@
-{extends file="main.tpl"}
+{extends file="base.tpl"}
 {block name=title}Редактирование комментария{/block}
 {block name=pageScripts}{/block}
 {block name=body}

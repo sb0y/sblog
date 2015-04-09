@@ -1,4 +1,4 @@
-{extends file="main.tpl"}
+{extends file="base.tpl"}
 {block name=title}Список всех объектов в портфолио{/block}
 {block name=pageScripts}
 <script type="text/javascript" src="{$urlBase}resources/js/lists.js"></script>

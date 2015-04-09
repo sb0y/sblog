@@ -3,11 +3,19 @@
 
 <head>
 
-	<meta charset="utf-8" />
-	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<meta name="description" content="" />
-	<meta name="author" content="andrey@bagrintsev.me" />
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Screenshot image from the QScreenShotter program">
+	<meta name="author" content="andrey@bagrintsev.me">
+
+	<meta property="og:image" content="{$urlBase}content/screenshots/{$userID}/{$img.small.name}">
+	<meta property="og:title" content="QScreenShotter screen image">
+    <meta property="og:type" content="website">
+	<meta property="og:url" content="{$urlBase}{$calledController}/display/{$img.big.name}/{$img.small.name}">
+	<meta property="og:site_name" content="{$siteDomain}">
+	<meta property="og:description" content="Screenshot image from the QScreenShotter program">
+	<link rel="image_src" href="{$urlBase}content/screenshots/{$userID}/{$img.big.name}">
 
 	<title>Screenshot view</title>
 
@@ -195,7 +203,7 @@
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
 					</button>
-					<a class="navbar-brand" href="{$urlBase}{$calledController}">{$siteDomain}/{$calledController}</a>
+					<strong><a title="This is a program that made this awesome screenshot!" class="navbar-brand" target="_blank" href="https://github.com/sb0y/QScreenShotter">QScreenShotter</a></strong>
 				</div>
 				<!-- Collect the nav links, forms, and other content for toggling -->
 				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -219,6 +227,10 @@
 								<li><a href="#" data-toggle="modal" data-target="#mainModal" data-tpl="tpl-codes">Embed codes</a></li>
 							</ul>
 						</li>
+
+						<li>
+							<a title="This is a program that made this awesome screenshot!" target="_blank" href="https://github.com/sb0y/QScreenShotter">Download <strong>QScreenShotter</strong></a>
+						</li>
 					</ul>
 				</div>
 				<!-- /.navbar-collapse -->
@@ -241,7 +253,7 @@
 			<div class="item active">
 				<!-- Set the first background image using inline CSS below. -->
 				<div class="fill">
-					<img data-imgs="{$img.big.name}/{$img.small.name}" src="" data-src="{$img.big.name}">
+					<img data-busy="false" data-imgs="{$img.big.name}/{$img.small.name}" src="" data-src="{$img.big.name}">
 				</div>
 				<div class="carousel-caption">
 					<h2>Upload date: {$img.big.dt|date_format:"%H:%m %m.%d.%Y"}</h2>
@@ -252,7 +264,7 @@
 			<div class="item">
 				<!-- Set the second background image using inline CSS below. -->
 				<div class="fill">
-					<img data-imgs="{$v.big.name}/{$v.small.name}" src="" data-src="{$v.big.name}">
+					<img data-busy="false" data-imgs="{$v.big.name}/{$v.small.name}" src="" data-src="{$v.big.name}">
 				</div>
 				<div class="carousel-caption">
 					<h2>Upload date: {$v.big.dt|date_format:"%H:%m %m.%d.%Y"}</h2>
@@ -271,7 +283,7 @@
 
 	</header>
 
-		<script type="text/javascript">
+	<script type="text/javascript">
 
 		function scroll()
 		{
@@ -284,22 +296,42 @@
 			});
 		}
 
-		function imageLoad()
+		function init ( $imgs, forceReload )
 		{
-			var w = $(window).width();
-			var h = $(window).height();
-
-			$imgs = $( ".fill img" );
+			var w = $( window ).width();
+			var h = $( window ).height();
 
 			$imgs.each ( function ( i )
 			{
-				$this = $(this);
-				var data = $this.data ( "src" );
+				$this = $( this );
 
-				//$this.css ( "height", h+"px" ).css ( "width", w+"px" );
-				$this.attr ( "src", "{$urlBase}{$calledController}/resize/{$userID}/"+data+"/"+w+"x"+h );
+				if ( !forceReload && $this.attr ( "src" ) !== "" )
+				{
+					return true;
+				}
+
+				$this.attr ( "src", "{$moduleResources}images/ajax-loader.gif" );
+				$this.attr ( "data-busy", "true" );
+				$this.attr ( "style", "position:absolute;bottom:"+( $( window ).height() / 2 - 80 )+"px;right:"+( ( $( window ).width() / 2 - 140 ) ) + "px;" );
+
+				var src = $this.data ( "src" );
+
+				$.get ( "{$urlBase}{$calledController}/resize/{$userID}/"+src+"/"+w+"x"+h, 
+				function ( data )
+				{
+					$this.hide();
+					$this.attr ( "style", "" );
+					$this.attr ( "src", data );
+					$this.fadeIn ( "fast" );
+					$this.attr ( "data-busy", "false" );
+				});
 			});
+		}
 
+		function load ( forceReload )
+		{
+			$imgs = $( ".active .fill img" );
+			init ( $imgs, forceReload );
 		}
 
 		function update ( big, small )
@@ -312,9 +344,21 @@
 				$obj = $( obj );
 				var str = "";
 
-				if ( $obj.prop ( "tagName" ).toLowerCase() != "a" )
-					str = $obj.val()
-				else str = $obj.attr ( "href" );
+				switch ( $obj.prop ( "tagName" ).toLowerCase() )
+				{
+					case "a":
+					case "link":
+						str = $obj.attr ( "href" );
+					break;
+
+					case "meta":
+						str = $obj.attr ( "content" );
+					break;
+
+					default:
+						str = $obj.val()
+					break;
+				}
 
 				for ( var i in TPLVars )
 				{
@@ -333,15 +377,18 @@
 						$obj.text ( str );
 					break;
 
+					case "link":
 					case "a":
 						$obj.attr ( "href", str );
+					break;
+
+					case "meta":
+						$obj.attr ( "content", str );
 					break;
 				}
 
 			});
 		}
-
-		imageLoad();
 
 		$( "#mainModal" ).on ( "show.bs.modal", function ( event ) 
 		{
@@ -368,16 +415,28 @@
 			history.pushState ( null, null, "{$urlBase}{$calledController}/display/{$userID}/" + imgs.join ( "/" ) );
 
 			update ( imgs [ 0 ], imgs [ 1 ] );
+			load ( false );
 		});
 
-		$( window ).resize ( function() 
+		var resizeTimer;
+
+		$(function() 
 		{
-			imageLoad();
+			$( window ).resize ( function() 
+			{
+				if ( $( ".active .fill img" ).data ( "busy" ) == "true" )
+				{
+					return;
+				}
+
+				clearTimeout ( resizeTimer );
+				resizeTimer = setTimeout ( function() { load ( true ) }, 100 );
+			});
 		});
 
 		update ( "{$img.big.name}", "{$img.small.name}" );
+		load ( false );
 		scroll();
-
 	</script>
 
 </body>

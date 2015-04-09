@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Редактирование профиля пользователя{/block}
 {block name=pageScripts}
 {/block}

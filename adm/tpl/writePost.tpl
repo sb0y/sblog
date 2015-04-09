@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Создание нового поста{/block}
 {block name=pageScripts}
 <script type="text/javascript">

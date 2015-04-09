@@ -255,6 +255,8 @@ class controller_index extends controller_base
 		$data = array_map ( "trim", $data );
 
 		$image = screenshot::scaleImage ( $fp, $data [ 0 ], $data [ 1 ] );
+
+		echo $image;
 	}
 	
 	function requestModels ( &$modelsNeeded )

@@ -1,4 +1,4 @@
-{extends file="main.tpl"}
+{extends file="base.tpl"}
 {block name=title}Создание нового объекта{/block}
 {block name=pageScripts}
 <script type="text/javascript">

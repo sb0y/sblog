@@ -107,6 +107,11 @@ class tpl extends Smarty
 			{
 				foreach ( $this->runBeforeDisplay as $k=>$v )
 				{
+					if ( !method_exists ( $v [ 0 ], $v [ 2 ] ) )
+					{
+						continue;
+					}
+
 					call_user_func_array ( $v[0] . $v[1] . $v[2], empty ( $v[3] ) ? array() : $v[3] );
 				}
 			}
@@ -165,12 +170,17 @@ class tpl extends Smarty
 	{
 		$this->assign ( "mainTPL", TPL_PATH );
 
+		$moduleResources = system::param ( "urlBase" ) . "engine/modules/" . core::$router->controllerCall . "/resources/";
+		system::setParam ( "moduleResources", $moduleResources );
+		$this->assign ( "moduleResources", $moduleResources );
+
 		if ( $page )
 			$this->pageName = $page;
 
 		$this->eventHandler();
 
 		$this->addTemplateDir ( array ( "modules" => ( MODULES_PATH . "/" . core::$router->controllerCall . "/" . system::$frontController . "/tpl" ) ) );
+
 		$this->cacheIdShow .= "|MODULES|MODULE_NAME_" . strtoupper ( core::$router->controllerCall );
 		$this->displayWrap();
 	}

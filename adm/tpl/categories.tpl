@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title}Список всех категорий{/block}
 {block name=pageScripts}
 <script type="text/javascript" src="{$urlBase}resources/js/lists.js"></script>

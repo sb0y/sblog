@@ -31,16 +31,26 @@ class screenshot extends model_base
 		$source = imagecreatefrompng ( $image );
 		$s = getimagesize ( $image );
 
-		$ratio_x = 1;
-		$ratio_y = 1;
+		if ( $s [ 0 ] > $max_x && $s [ 1 ] > $max_y )
+		{
 
-		$ratio_x = $max_x / $s[0];
-		$ratio_y = $max_y / $s[1];
+			$ratio_x = 1;
+			$ratio_y = 1;
 
-		$ratio = min ( $ratio_x, $ratio_y );
+			$ratio_x = $max_x / $s [ 0 ];
+			$ratio_y = $max_y / $s [ 1 ];
 
-		$new_size_x = floor ( $s[0] * $ratio );
-		$new_size_y = floor ( $s[1] * $ratio );
+			$ratio = min ( $ratio_x, $ratio_y );
+
+			$new_size_x = floor ( $s [ 0 ] * $ratio );
+			$new_size_y = floor ( $s [ 1 ] * $ratio );
+			
+		} else {
+
+			$new_size_x = $s [ 0 ];
+			$new_size_y = $s [ 1 ];
+		}
+
 
 		$resource = imagecreatetruecolor ( $new_size_x, $new_size_y );
 

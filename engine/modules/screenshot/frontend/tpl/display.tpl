@@ -436,7 +436,7 @@
 
 		update ( "{$img.big.name}", "{$img.small.name}" );
 		load ( false );
-		scroll();
+		//scroll();
 	</script>
 
 </body>

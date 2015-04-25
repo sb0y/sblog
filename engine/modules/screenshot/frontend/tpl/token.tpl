@@ -1,3 +1,4 @@
+{extends file="base.tpl"}
 {block name=title nocache}Access token{/block}
 {block name=body}
 	<div class="token">
